@@ -1,3 +1,265 @@
 .container {
-    background-color: red;
+  min-height: 100vh;
+    background-color: #0a0a0a;
+    padding: 40px;
+  }
+  
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  
+  .header>button {
+    width: auto;
+    padding: 10px 20px;
+    margin-top: 0;
+  }
+  
+  .headerActions {
+    display: flex;
+    gap: 12px;
+  }
+
+  .headerActions button {
+    width: auto;
+    padding: 10px 20px;
+    margin-top: 0;
+  }
+
+  .title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
+  }
+
+  /* Mensajes de estado de la petición a la API */
+  .message {
+    color: #888;
+    font-size: 15px;
+  }
+
+  .error {
+    color: #ff6b6b;
+    font-size: 15px;
+  }
+  
+  /* ============================================================
+                                  TABLE
+  ============================================================ */
+  .tableWrapper {
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid #222;
+  }
+  
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #111;
+  }
+  
+  .th {
+    padding: 14px 16px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #222;
+    background-color: #0f0f0f;
+  }
+  
+  .tr:not(:last-child) {
+    border-bottom: 1px solid #1a1a1a;
+  }
+  
+  .tr:hover {
+    background-color: #161616;
+  }
+  
+  .td {
+    padding: 14px 16px;
+    font-size: 14px;
+    color: #ccc;
+    white-space: nowrap;
+  }
+  
+  /* ============================================================
+                                  USER CELL
+    ============================================================ */
+  .userCell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .avatar {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    flex-shrink: 0;
+  }
+  
+  /* ============================================================
+                                  BADGE
+      ============================================================ */
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  
+  .badge__admin {
+    background-color: rgba(155, 93, 229, 0.15);
+    color: #b07ef8;
+  }
+  
+  .badge__editor {
+    background-color: rgba(0, 200, 150, 0.12);
+    color: #00c896;
+  }
+  
+  .badge__user {
+    background-color: rgba(255, 255, 255, 0.06);
+    color: #888;
+  }
+  
+  /* ============================================================
+                                  ACTION BUTTONS
+        ============================================================ */
+  .actions {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .actionBtn {
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 1px solid #333;
+    background-color: transparent;
+    color: #ccc;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  
+  .actionBtn:hover {
+    border-color: #666;
+    color: #fff;
+  }
+  
+  .actionBtnEdit {
+    border-color: rgba(155, 93, 229, 0.4);
+    color: #b07ef8;
+  }
+  
+  .actionBtnEdit:hover {
+    border-color: #9b5de5;
+    color: #c49dfa;
+  }
+  
+  /* ============================================================
+                                  MODAL — VER (detalle de usuario)
+  ============================================================ */
+  .viewGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px 24px;
+    margin: 0;
+  }
+
+  .viewRow {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .viewLabel {
+    font-size: 12px;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .viewValue {
+    font-size: 14px;
+    color: #eee;
+    margin: 0;
+  }
+
+  /* ============================================================
+                                  MODAL — EDITAR (formulario)
+  ============================================================ */
+  .editForm {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .formRow {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0 16px;
+  }
+
+  .label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #ccc;
+    margin-bottom: 6px;
+  }
+
+  .input,
+  .select {
+    width: 100%;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 14px;
+    box-sizing: border-box;
+    outline: none;
+  }
+
+  .input:focus,
+  .select:focus {
+    border-color: #666;
+  }
+
+  .modalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  .modalActions button {
+    width: auto;
+    padding: 10px 20px;
+    margin-top: 0;
+  }
+
+  /* ============================================================
+                                  MOBILE
+  ============================================================ */
+  @media (max-width: 768px) {
+    .container {
+      padding: 20px 16px;
+    }
+
+    .viewGrid,
+    .formRow {
+      grid-template-columns: 1fr;
+    }
 }

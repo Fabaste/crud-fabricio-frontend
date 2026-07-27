@@ -2,7 +2,8 @@
 // Flujo completo: registrar usuario + email de bienvenida con Resend (gratuito)
 // Instalación: npm install express resend dotenv
 
-require("dotenv").config();
+//require("dotenv").config();
+import 'dotenv/config'; 
 import express from "express";
 import { Resend } from "resend";
 

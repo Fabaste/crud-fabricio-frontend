@@ -10,8 +10,11 @@
     },
     "dependencies": {
         "@tanstack/react-router": "^1.114.22",
+        "dotenv": "^17.4.2",
+        "express": "^5.2.1",
         "react": "^19.0.0",
-        "react-dom": "^19.0.0"
+        "react-dom": "^19.0.0",
+        "resend": "^6.17.2"
     },
     "devDependencies": {
         "@types/node": "^22.0.0",

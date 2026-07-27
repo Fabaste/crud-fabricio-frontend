@@ -1,9 +1,8 @@
 .container {
-    background-color: blue;
-    display: flex;
+  display: flex;
     height: 100vh;
-}
-
+  }
+  
   /* ============================================================
                     LADO IZQUIERDO
           ============================================================ */
@@ -60,6 +59,13 @@
     border-color: #666;
   }
   
+  /* Mensaje de error de la API */
+  .error {
+    font-size: 14px;
+    color: #ff6b6b;
+    margin: 0 0 16px;
+  }
+
   .footer {
     margin-top: 24px;
     font-size: 14px;
@@ -81,9 +87,13 @@
         ============================================================ */
   .right {
     flex: 1;
+    display: flex;
     background-color: #e8e8e8;
   }
   
+  .animacion{
+    background-color: rgb(247, 141, 106);
+  }
   /* ============================================================
                     MOBILE
       ============================================================ */
