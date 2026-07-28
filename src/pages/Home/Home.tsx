@@ -74,7 +74,7 @@ function Home() {
       <div className={styles.header}>
         <h1 className={styles.title}>Usuarios</h1>
         <div className={styles.headerActions}>
-          <Button variant="primary" onClick={() => navigate({ to: '/create-user' })}>+ Agregar</Button>
+          <Button variant="primary" onClick={() => navigate({ to: '/createUser' })}>+ Agregar</Button>
           <Button variant="secondary" onClick={handleLogout}>Cerrar sesión</Button>
         </div>
       </div>

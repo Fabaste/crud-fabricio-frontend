@@ -7,7 +7,7 @@ function Navigation () {
         <nav className = {styles.nav}>
             <Link to="/">Home</Link>
             <Link to="/login">Login</Link>
-            <Link to="/register">Register</Link>
+            <Link to="/createUser">CreateUser</Link>
         </nav>
     )
 }

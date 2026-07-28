@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import styles from './Login.module.css'
-import Button from '@/components/ui/Button/Button'
-import { login } from '@/api/login'
+import Button from '@/components/ui/Button/Button.tsx'
+import { login } from '@/api/login.ts'
 
 import logo from '@/assets/logoFRS.png'
 
@@ -22,6 +22,7 @@ function Login() {
     setError(null)
     setLoading(true)
     try {
+      console.log(email)
       const data = await login(email, password)
       // Guardamos el token para las futuras peticiones autenticadas
       localStorage.setItem('token', data.token)
