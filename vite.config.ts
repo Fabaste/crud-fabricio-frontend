@@ -8,5 +8,5 @@ export default defineConfig({
         alias: {
             '@': path.resolve(import.meta.dirname, './src'),
         },
-    },
+    }
 })
