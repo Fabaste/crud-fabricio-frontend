@@ -10,6 +10,7 @@
     },
     "dependencies": {
         "@tanstack/react-router": "^1.114.22",
+        "@vis.gl/react-google-maps": "^1.9.0",
         "dotenv": "^17.4.2",
         "express": "^5.2.1",
         "react": "^19.0.0",

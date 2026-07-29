@@ -105,6 +105,14 @@
     border: 1px solid #333;
     flex-shrink: 0;
   }
+   .imagen {
+    width: 46px;
+    height: 46px;
+    /*border-radius: 50%;
+    background-color: #1a1a1a;
+    border: 1px solid #333;*/
+    flex-shrink: 0;
+  }
   
   /* ============================================================
                                   BADGE
@@ -115,21 +123,27 @@
     border-radius: 999px;
     font-size: 12px;
     font-weight: 600;
+    color:#ffffff
   }
   
   .badge__admin {
-    background-color: rgba(155, 93, 229, 0.15);
-    color: #b07ef8;
+    background-color: rgb(117, 9, 250);
+    /*color: #b07ef8;*/
   }
   
-  .badge__editor {
-    background-color: rgba(0, 200, 150, 0.12);
-    color: #00c896;
+  .badge__root {
+    background-color: rgb(7, 157, 9);
+    /*color: #00c896;*/
   }
   
   .badge__user {
-    background-color: rgba(255, 255, 255, 0.06);
-    color: #888;
+    background-color: rgb(26, 66, 225);
+    /*color: #5cc0d4;*/
+  }
+
+  .badge__guest {
+    background-color: rgb(242, 16, 16);
+    /*color: #f95353;*/
   }
   
   /* ============================================================

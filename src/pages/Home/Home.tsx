@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import Button from '@/components/ui/Button/Button'
 import Modal from '@/components/blocks/Modal/Modal'
@@ -6,6 +6,8 @@ import styles from './Home.module.css'
 import { getUsers } from '@/api/getUsers'
 import { updateUser } from '@/api/updateUser'
 import type { User } from '@/api/types'
+import { APIProvider, Map, Marker } from '@vis.gl/react-google-maps'
+import {KEY_MAPS} from '@/config/globals.ts'
 
 const ROLES = ['ROOT', 'ADMIN', 'USER', 'GUEST']
 
@@ -18,7 +20,10 @@ function Home() {
 
   // Usuario seleccionado para ver o editar en el modal
   const [modalUser, setModalUser] = useState<User | null>(null)
-  const [modalMode, setModalMode] = useState<'view' | 'edit' | null>(null)
+  const [modalMode, setModalMode] = useState<'view' | 'edit' | 'map' | null>(null)
+
+  //Localidad seleccionada para ver en Google Maps
+  const [modalLocalidad, setModalLocalidad] = useState<User | null>(null)
 
   useEffect(() => {
     // Protección mínima de ruta: sin token no tiene sentido estar acá
@@ -56,6 +61,11 @@ function Home() {
   function openEdit(user: User) {
     setModalUser(user)
     setModalMode('edit')
+  }
+
+  function openMap(user: User) {
+    setModalLocalidad(user)
+    setModalMode('map')
   }
 
   function closeModal() {
@@ -107,17 +117,32 @@ function Home() {
                   <td className={styles.td}>
                     <div className={styles.userCell}>
                       {/* La API no devuelve imagen: generamos un avatar con el nombre */}
+                      {/*src={`https://ui-avatars.com/api/?name=${user.nombre}+${user.apellido}&background=random`}*/}
                       <img
                         className={styles.avatar}
-                        src={`https://ui-avatars.com/api/?name=${user.nombre}+${user.apellido}&background=random`}
+                        src={`./src/assets/ui-avatars/${user._id}.jpeg`}
+                        onError={(e) => {
+                          e.currentTarget.onerror = null; // Evita bucles infinitos si la API también falla
+                          e.currentTarget.src = `https://ui-avatars.com/api/?name=${user.nombre}+${user.apellido}&background=random`;
+                        }}
                         alt={`${user.nombre} ${user.apellido}`}
                       />
                       <span>{user.nombre} {user.apellido}</span>
                     </div>
                   </td>
                   <td className={styles.td}>{user.email}</td>
-                  <td className={styles.td}>{user.genero}</td>
-                  <td className={styles.td}>{user.localidad}</td>
+                  <td className={styles.td}>
+                    <div className={styles.userCell}>
+                      <img
+                        className={styles.imagen}
+                        src={`./src/assets/ui-genero/${user.genero.toLowerCase()}.png`}
+                        alt={`${user.genero}`}
+                      />
+                    </div>
+                  </td>
+                  <td className={styles.td}>
+                      <a onClick={() => openMap(user)}>{user.localidad}</a>
+                  </td>
                   <td className={styles.td}>
                     <span className={`${styles.badge} ${styles[`badge__${user.role.toLowerCase()}`] ?? ''}`}>
                       {user.role}
@@ -144,12 +169,14 @@ function Home() {
       <Modal
         isOpen={modalMode !== null}
         onClose={closeModal}
-        title={modalMode === 'view' ? 'Detalle de usuario' : 'Editar usuario'}
+        title={modalMode === 'view' ? 'Detalle de usuario' : modalMode === 'edit' ? 'Editar usuario' : ''}
+        /*title={modalMode === 'view' ? 'Detalle de usuario' : 'Editar usuario'}*/
       >
         {modalMode === 'view' && modalUser && <UserDetails user={modalUser} />}
         {modalMode === 'edit' && modalUser && (
           <UserEditForm user={modalUser} onCancel={closeModal} onSaved={handleUserUpdated} />
         )}
+        {modalMode === 'map' && modalLocalidad && <Ubicacion user={modalLocalidad} />}
       </Modal>
 
     </main>
@@ -225,7 +252,7 @@ function UserEditForm({
         apellido,
         genero,
         edad: Number(edad),
-        fechaNacimiento,
+        fechaNacimiento: fechaNacimiento,
         telefono,
         direccion,
         localidad,
@@ -404,5 +431,52 @@ function UserEditForm({
     </form>
   )
 }
+
+
+// ------------------------------------------------------------
+// Vista "Mapa": Mapa de Google
+// ------------------------------------------------------------
+function Ubicacion({ user }: { user: User }) {
+  const [isOpen, setIsOpen] = useState(true);
+  const position = { lat: -29.1414, lng: -59.6437 }; // Coordenadas de ejemplo (Avellaneda, Santa Fe)
+
+  return (
+    <div style={{ padding: '20px' }}>
+      <button onClick={() => setIsOpen(true)}>Abrir Mapa en Modal</button>
+
+      {isOpen && (
+        <div style={modalStyles.overlay}>
+          <div style={modalStyles.content}>
+            <button style={modalStyles.closeBtn} onClick={() => setIsOpen(false)}>X</button>
+            
+            <APIProvider apiKey={KEY_MAPS}>
+              <div style={{ width: '100%', height: '400px' }}>
+                <Map defaultCenter={position} defaultZoom={13}>
+                  <Marker position={position} />
+                </Map>
+              </div>
+            </APIProvider>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const modalStyles = {
+  overlay: {
+    position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex',
+    justifyContent: 'center', alignItems: 'center', zIndex: 1000
+  },
+  content: {
+    backgroundColor: '#fff', padding: '20px', borderRadius: '8px',
+    width: '500px', maxWidth: '90%', position: 'relative'
+  },
+  closeBtn: {
+    position: 'absolute', top: '10px', right: '10px', background: 'red',
+    color: '#fff', border: 'none', padding: '5px 10px', cursor: 'pointer', borderRadius: '4px'
+  }
+};
 
 export default Home
