@@ -208,6 +208,7 @@ function Home() {
                       >
                         Editar
                       </button>
+                      <button className={styles.actionBtn} onClick={() => openView(user)}>Ver</button>
                     </div>
                   </td>
                 </tr>
