@@ -5,6 +5,7 @@ import Modal from '@/components/blocks/Modal/Modal'
 import styles from './Home.module.css'
 import { getUsers } from '@/api/getUsers'
 import { updateUser } from '@/api/updateUser'
+import { createUser } from '@/api/createUser'
 import type { User } from '@/api/types'
 import { APIProvider, Map, Marker} from '@vis.gl/react-google-maps'
 import {KEY_MAPS} from '@/config/globals.ts'
@@ -22,7 +23,7 @@ function Home() {
 
   // Usuario seleccionado para ver o editar en el modal
   const [modalUser, setModalUser] = useState<User | null>(null)
-  const [modalMode, setModalMode] = useState<'view' | 'edit' | 'map' | null>(null)
+  const [modalMode, setModalMode] = useState<'view' | 'edit' | 'map' | 'create' | null>(null)
 
   //Localidad seleccionada para ver en Google Maps
   //const [modalLocalidad, setModalLocalidad] = useState<User | null>(null)
@@ -37,7 +38,8 @@ function Home() {
     async function loadUsers() {
       try {
         const data = await getUsers()
-        setUsers(data)
+        //setUsers(data)
+        setUsers(Array.isArray(data) ? data : data ? [data] : []);
       } catch (error: any) {
         setError(error.message)
       } finally {
@@ -60,9 +62,9 @@ function Home() {
     setModalMode('view')
   }
 
-  function openEdit(user: User) {
+  function openEdit(user: User | null) {
     setModalUser(user)
-    setModalMode('edit')
+    setModalMode(user ? 'edit' : 'create')
   }
 
   function openMap(user: User) {
@@ -85,10 +87,12 @@ function Home() {
   const usersPerPage = 5;
 
   // Lógica de filtrado (Se queda aquí para procesar los datos)
-  const filteredUsers = users.filter((user) => {
+  //const filteredUsers = (users || []).filter((user) => {
+  const filteredUsers = Array.isArray(users)
+  ? users.filter((user) => {
     const searchString = `${user.nombre} ${user.apellido} ${user.email} ${user.role} ${user.localidad}`.toLowerCase();
     return searchString.includes(searchTerm.toLowerCase());
-  });
+  }): [];
 
   // Lógica de paginación (Se queda aquí para calcular los cortes)
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
@@ -113,7 +117,8 @@ function Home() {
           onSearchChange={handleSearchChange}
         />
         <div className={styles.headerActions}>
-          <Button variant="primary" onClick={() => navigate({ to: '/createUser' })}>+ Agregar</Button>
+          {/*<Button variant="primary" onClick={() => navigate({ to: '/createUser' })}>+ Agregar</Button>*/}
+          <Button variant="primary" onClick={() => openEdit(null)}>+ Agregar</Button>
           <Button variant="secondary" onClick={handleLogout}>Cerrar sesión</Button>
         </div>
       </div>
@@ -211,11 +216,14 @@ function Home() {
       <Modal
         isOpen={modalMode !== null }
         onClose={closeModal}
-        title={modalMode === 'view' ? 'Detalle de usuario' : modalMode === 'edit' ? 'Editar usuario' : ''}
+        title={modalMode === 'view' ? 'Detalle de usuario' : modalMode === 'edit' ? 'Editar usuario' : modalMode === 'create' ? 'Crear usuario' :''}
         /*title={modalMode === 'view' ? 'Detalle de usuario' : 'Editar usuario'}*/
       >
         {modalMode === 'view' && modalUser && <UserDetails user={modalUser} />}
         {modalMode === 'edit' && modalUser && (
+          <UserEditForm user={modalUser} onCancel={closeModal} onSaved={handleUserUpdated} />
+        )}
+        {modalMode === 'create' && (
           <UserEditForm user={modalUser} onCancel={closeModal} onSaved={handleUserUpdated} />
         )}
         {modalMode === 'map' && modalUser && <Ubicacion user={modalUser} onCloseMap={closeModal}/>}
@@ -260,31 +268,37 @@ function UserDetails({ user }: { user: User }) {
 // Vista "Editar": formulario que guarda cambios con updateUser
 // El email no se incluye: el backend no permite modificarlo
 // ------------------------------------------------------------
+// 1. Cambiamos el tipado para aceptar User | null
 function UserEditForm({
   user,
   onCancel,
   onSaved,
 }: {
-  user: User
+  user: User | null
   onCancel: () => void
   onSaved: (user: User) => void
 }) {
-  const [nombre, setNombre] = useState(user.nombre)
-  const [apellido, setApellido] = useState(user.apellido)
-  const [genero, setGenero] = useState(user.genero)
-  const [edad, setEdad] = useState(String(user.edad))
-  const [fechaNacimiento, setFechaNacimiento] = useState(user.fechaNacimiento?.slice(0, 10) ?? '')
-  const [telefono, setTelefono] = useState(user.telefono)
-  const [direccion, setDireccion] = useState(user.direccion)
-  const [localidad, setLocalidad] = useState(user.localidad)
-  const [provincia, setProvincia] = useState(user.provincia)
-  const [pais, setPais] = useState(user.pais)
-  const [codigoPostal, setCodigoPostal] = useState(user.codigoPostal)
-  const [role, setRole] = useState(user.role)
+  // 2. Usamos encadenamiento opcional (?.) y valores por defecto para el modo creación
+  const [nombre, setNombre] = useState(user?.nombre ?? '')
+  const [apellido, setApellido] = useState(user?.apellido ?? '')
+  const [email, setEmail] = useState(user?.email ?? '')
+  const [genero, setGenero] = useState(user?.genero ?? '')
+  const [edad, setEdad] = useState(String(user?.edad ?? ''))
+  const [fechaNacimiento, setFechaNacimiento] = useState(user?.fechaNacimiento?.slice(0, 10) ?? '')
+  const [telefono, setTelefono] = useState(user?.telefono ?? '')
+  const [direccion, setDireccion] = useState(user?.direccion ?? '')
+  const [localidad, setLocalidad] = useState(user?.localidad ?? '')
+  const [provincia, setProvincia] = useState(user?.provincia ?? '')
+  const [pais, setPais] = useState(user?.pais ?? '')
+  const [codigoPostal, setCodigoPostal] = useState(user?.codigoPostal ?? '')
+  const [role, setRole] = useState(user?.role ?? ROLES[2]) // Rol inicial por defecto
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  async function handleSubmit(e: React.FormEvent) {
+  // 3. Identificamos si estamos editando o creando
+  const isEditing = Boolean(user && user._id)
+
+  /*async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
     setLoading(true)
@@ -304,6 +318,47 @@ function UserEditForm({
         role,
       })
       onSaved(updated)
+    } catch (error: any) {
+      setError(error.message)
+    } finally {
+      setLoading(false)
+    }
+  }*/
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError(null)
+    setLoading(true)
+
+    // 1. Agrupamos los datos base que comparten ambos modos
+    const userData = {
+      nombre,
+      apellido,
+      genero,
+      edad: Number(edad),
+      fechaNacimiento,
+      telefono,
+      direccion,
+      localidad,
+      provincia,
+      pais,
+      codigoPostal,
+      role,
+    }
+
+    try {
+      let savedUser: User
+
+      if (isEditing && user) {
+        // Modo Edición: Se envían solo los datos base (sin email)
+        savedUser = await updateUser(user._id, userData)
+      } else {
+        // Modo Creación: Combinamos los datos base con el email usando el operador spread (...)
+        const newUserData = { ...userData, email }
+        savedUser = await createUser(newUserData)
+      }
+
+      onSaved(savedUser)
     } catch (error: any) {
       setError(error.message)
     } finally {
@@ -390,15 +445,31 @@ function UserEditForm({
         </div>
       </div>
 
-      <label className={styles.label} htmlFor="edit-direccion">Dirección</label>
-      <input
-        className={styles.input}
-        id="edit-direccion"
-        type="text"
-        value={direccion}
-        onChange={(e) => setDireccion(e.target.value)}
-        required
-      />
+      <div className={styles.formRow}>
+        <div>
+          <label className={styles.label} htmlFor="edit-email">Email</label>
+          <input
+            className={styles.input}
+            id="edit-email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="tu@correo.com"
+            required
+          />
+        </div>
+        <div>
+          <label className={styles.label} htmlFor="edit-direccion">Dirección</label>
+          <input
+            className={styles.input}
+            id="edit-direccion"
+            type="text"
+            value={direccion}
+            onChange={(e) => setDireccion(e.target.value)}
+            required
+          />
+        </div>
+      </div>
 
       <div className={styles.formRow}>
         <div>
@@ -467,7 +538,9 @@ function UserEditForm({
       <div className={styles.modalActions}>
         <Button variant="secondary" type="button" onClick={onCancel}>Cancelar</Button>
         <Button variant="primary" type="submit" disabled={loading}>
-          {loading ? 'Guardando...' : 'Guardar cambios'}
+          {/* Texto dinámico del botón según la acción */}
+          {loading ? 'Guardando...' : isEditing ? 'Guardar cambios' : 'Crear usuario'}
+          {/*{loading ? 'Guardando...' : 'Guardar cambios'}*/}
         </Button>
       </div>
     </form>

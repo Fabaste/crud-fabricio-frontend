@@ -1,10 +1,14 @@
 import { API_URL } from '@/config/globals'
+import type { User } from '@/api/types'
+
+export type CreateUserData = Omit<User, '_id'>;
 
 // ------------------------------------------------------------
 // POST /users → crea un usuario nuevo
 // Es una ruta protegida: solo un admin ya logueado puede crear usuarios
 // ------------------------------------------------------------
-export async function createUser(nombre: string, apellido: string, email: string, password: string) {
+//export async function createUser(nombre: string, apellido: string, email: string, password: string) {
+export async function createUser(data: CreateUserData): Promise<User> {
   const token = localStorage.getItem('token')
 
   const response = await fetch(`${API_URL}/users`, {
@@ -13,8 +17,10 @@ export async function createUser(nombre: string, apellido: string, email: string
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({
-      nombre,
+
+    body: JSON.stringify(data),
+    /*body: JSON.stringify({
+      userData.nombre,
       apellido,
       email,
       password,
@@ -30,7 +36,7 @@ export async function createUser(nombre: string, apellido: string, email: string
       provincia: 'Sin provincia',
       pais: 'Argentina',
       codigoPostal: '0000',
-    }),
+    }),*/
   })
 
   const body = await response.json()

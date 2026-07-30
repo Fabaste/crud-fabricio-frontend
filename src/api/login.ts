@@ -13,7 +13,7 @@ export async function login(email: string, password: string){
 //console.log(response.json())
     // 2. Convertimos la respuesta a JSON()
     const body = await response.json()
-    console.log(body.password)
+    //console.log(body)
     // 3. Si el backend respondio con error, lanzamos su mensaje
     if (!body.success){
         throw new Error(body.message) // ej: "Password incorrecto"

@@ -22,8 +22,8 @@ function Login() {
     setError(null)
     setLoading(true)
     try {
-      console.log(email)
       const data = await login(email, password)
+      //console.log(data)
       // Guardamos el token para las futuras peticiones autenticadas
       localStorage.setItem('token', data.token)
       localStorage.setItem('role', data.role)

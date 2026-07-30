@@ -17,7 +17,7 @@ export async function getUsers(): Promise<User []> {
         },
     })
     const body = await response.json()
-
+console.log(body.data)
 
     if(!body.success) {
         throw new Error(body.message) // ej: "Acceso denegado", "Token inválido"

@@ -31,7 +31,6 @@
 .pageButton:hover:not(:disabled) {
   background-color: #646cff;
   color: white;
-  cursor: not-allowed;
 }
 
 /* Estado de la página actual */
@@ -45,6 +44,7 @@
 /* Estado deshabilitado (ej. anterior en la página 1) */
 .pageButton:disabled {
   opacity: 0.65;
+  cursor: not-allowed;
 }
 
 /* Puntos suspensivos */
