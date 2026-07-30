@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import Button from '@/components/ui/Button/Button'
+import DeleteButton from '@/components/ui/DeleteButton/DeleteButton'
 import Modal from '@/components/blocks/Modal/Modal'
 import styles from './Home.module.css'
 import { getUsers } from '@/api/getUsers'
@@ -91,6 +92,17 @@ function Home() {
   function handleUserUpdated(updated: User) {
     setUsers((prev) => prev.map((u) => (u._id === updated._id ? updated : u)))
     closeModal()
+  }
+  // 4. Función para eliminar el usuario por su ID
+  const handleDelete = (id: number, name: string) => {
+    // Confirmación de seguridad
+    const confirmDelete = window.confirm(`¿Estás seguro de que deseas eliminar a ${name}?`);
+    
+    if (confirmDelete) {
+      // Filtramos la lista para excluir al usuario eliminado
+      const updatedUsers = users.filter(user => user.id !== id);
+      setUsers(updatedUsers);
+    }
   }
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -208,7 +220,7 @@ function Home() {
                       >
                         Editar
                       </button>
-                      <button className={styles.actionBtn} onClick={() => openView(user)}>Ver</button>
+                      <DeleteButton onClick={handleDelete}>Borrar</DeleteButton>
                     </div>
                   </td>
                 </tr>

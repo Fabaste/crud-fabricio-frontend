@@ -1,0 +1,28 @@
+.deleteBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ef4444; /* Rojo */
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.deleteBtn:hover {
+  background-color: #fee2e2; /* Fondo rojo claro */
+  color: #b91c1c; /* Rojo más oscuro */
+}
+
+.deleteBtn:disabled {
+  color: #9ca3af;
+  background-color: transparent;
+  cursor: not-allowed;
+}
+
+.deleteIcon {
+  width: 20px;
+  height: 20px;
+}
