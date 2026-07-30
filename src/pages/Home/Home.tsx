@@ -6,7 +6,7 @@ import styles from './Home.module.css'
 import { getUsers } from '@/api/getUsers'
 import { updateUser } from '@/api/updateUser'
 import type { User } from '@/api/types'
-import { APIProvider, Map, Marker, useApiIsLoaded, useMapsLibrary } from '@vis.gl/react-google-maps'
+import { APIProvider, Map, Marker} from '@vis.gl/react-google-maps'
 import {KEY_MAPS} from '@/config/globals.ts'
 import Buscador from '@/components/blocks/Search/Search'; // Importa el buscador
 import Paginacion from '@/components/blocks/Pagination/Pagination'; // Importa la paginación
@@ -23,12 +23,6 @@ function Home() {
   // Usuario seleccionado para ver o editar en el modal
   const [modalUser, setModalUser] = useState<User | null>(null)
   const [modalMode, setModalMode] = useState<'view' | 'edit' | 'map' | null>(null)
-
-  // Tipos explícitos de Search y Pagination
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-    setCurrentPage(1); 
-  };
 
   //Localidad seleccionada para ver en Google Maps
   //const [modalLocalidad, setModalLocalidad] = useState<User | null>(null)
@@ -86,16 +80,44 @@ function Home() {
     closeModal()
   }
 
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const usersPerPage = 5;
+
+  // Lógica de filtrado (Se queda aquí para procesar los datos)
+  const filteredUsers = users.filter((user) => {
+    const searchString = `${user.nombre} ${user.apellido} ${user.email} ${user.role} ${user.localidad}`.toLowerCase();
+    return searchString.includes(searchTerm.toLowerCase());
+  });
+
+  // Lógica de paginación (Se queda aquí para calcular los cortes)
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+  const indexOfLastUser = currentPage * usersPerPage;
+  const indexOfFirstUser = indexOfLastUser - usersPerPage;
+  const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
+
+  // Tipos explícitos de Search y Pagination
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1); 
+  };
+
   return (
     <main className={styles.container}>
 
       <div className={styles.header}>
         <h1 className={styles.title}>Usuarios</h1>
+       {/* --- Componente Search --- */}
+        <Buscador
+          searchTerm={searchTerm}
+          onSearchChange={handleSearchChange}
+        />
         <div className={styles.headerActions}>
           <Button variant="primary" onClick={() => navigate({ to: '/createUser' })}>+ Agregar</Button>
           <Button variant="secondary" onClick={handleLogout}>Cerrar sesión</Button>
         </div>
       </div>
+
 
       {/* Estados de la petición: cargando → error → vacío → tabla */}
       {loading && <p className={styles.message}>Cargando usuarios...</p>}
@@ -120,7 +142,8 @@ function Home() {
               </tr>
             </thead>
             <tbody>
-              {users.map((user) => (
+              {/*</tbody>{users.map((user) => (*/}
+                {currentUsers.map((user) => (
                 <tr key={user._id} className={styles.tr}>
                   <td className={styles.td}>
                     <div className={styles.userCell}>
@@ -175,6 +198,13 @@ function Home() {
               ))}
             </tbody>
           </table>
+
+           {/* --- Componente Pagination --- */}
+          <Paginacion
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={(targetPage) => setCurrentPage(targetPage)}
+          />
         </div>
       )}
 

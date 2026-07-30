@@ -1,0 +1,23 @@
+.searchContainer {
+  display: flex;
+  max-width: 400px;
+  width: 100%;
+  /*border: 2px solid #e0e0e0;*/
+  overflow: hidden;
+  transition: border-color 0.3s ease;
+  max-height: 100px;
+  height: 50%;
+}
+
+.searchInput {
+  flex: 1;
+  height: 40px;
+  padding: 12px 16px;
+  outline: none;
+  font-size: 1rem;
+  color: #646cff;
+  border: 1px solid #646cff;
+  background-color: transparent;
+  border-radius: 8px;
+}
+

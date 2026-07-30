@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from './Buscador.module.css';
+import styles from './Search.module.css';
 
 // Definimos la interfaz de las props
 interface BuscadorProps {
@@ -9,7 +9,7 @@ interface BuscadorProps {
 
 export default function Buscador({ searchTerm, onSearchChange }: BuscadorProps) {
   return (
-    <div className={styles.filterContainer}>
+    <div className={styles.searchContainer}>
       <input
         type="text"
         placeholder="Buscar por usuario, email, rol..."
