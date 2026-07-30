@@ -294,7 +294,7 @@ function UserEditForm({
         apellido,
         genero,
         edad: Number(edad),
-        fechaNacimiento: fechaNacimiento,
+        fechaNacimiento,
         telefono,
         direccion,
         localidad,
