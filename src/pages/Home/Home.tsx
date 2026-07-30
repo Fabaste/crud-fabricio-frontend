@@ -418,14 +418,6 @@ function UserEditForm({
               <option key={r.value} value={r.value}>{r.label}</option>
             ))}
           </select>
-          {/*<input
-            className={styles.input}
-            id="edit-genero"
-            type="text"
-            value={genero}
-            onChange={(e) => setGenero(e.target.value.toUpperCase())}
-            required
-          />*/}
         </div>
         <div>
           <label className={styles.label} htmlFor="edit-edad">Edad</label>
