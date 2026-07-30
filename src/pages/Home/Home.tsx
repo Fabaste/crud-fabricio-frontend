@@ -12,7 +12,18 @@ import {KEY_MAPS} from '@/config/globals.ts'
 import Buscador from '@/components/blocks/Search/Search'; // Importa el buscador
 import Paginacion from '@/components/blocks/Pagination/Pagination'; // Importa la paginación
 
-const ROLES = ['ROOT', 'ADMIN', 'USER', 'GUEST']
+const ROLES = [
+  {value:'ROOT', label: 'Root'},
+  {value:'ADMIN', label: 'Administrador'},
+  {value:'USER', label: 'Usuario'},
+  {value:'GUEST', label: 'Invitado'},
+]
+
+const GENEROS = [
+  {value:'M', label: 'Masculino'},
+  {value:'F', label: 'Femenino'},
+]
+
 
 function Home() {
   const navigate = useNavigate()
@@ -282,7 +293,7 @@ function UserEditForm({
   const [nombre, setNombre] = useState(user?.nombre ?? '')
   const [apellido, setApellido] = useState(user?.apellido ?? '')
   const [email, setEmail] = useState(user?.email ?? '')
-  const [genero, setGenero] = useState(user?.genero ?? '')
+  const [genero, setGenero] = useState(user?.genero ?? GENEROS[0].value) //Genero inicial por defecto
   const [edad, setEdad] = useState(String(user?.edad ?? ''))
   const [fechaNacimiento, setFechaNacimiento] = useState(user?.fechaNacimiento?.slice(0, 10) ?? '')
   const [telefono, setTelefono] = useState(user?.telefono ?? '')
@@ -291,7 +302,7 @@ function UserEditForm({
   const [provincia, setProvincia] = useState(user?.provincia ?? '')
   const [pais, setPais] = useState(user?.pais ?? '')
   const [codigoPostal, setCodigoPostal] = useState(user?.codigoPostal ?? '')
-  const [role, setRole] = useState(user?.role ?? ROLES[2]) // Rol inicial por defecto
+  const [role, setRole] = useState(user?.role ?? ROLES[2].value) // Rol inicial por defecto
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -396,14 +407,25 @@ function UserEditForm({
       <div className={styles.formRow}>
         <div>
           <label className={styles.label} htmlFor="edit-genero">Género</label>
-          <input
+          <select
+            className={styles.select}
+            id="edit-genero"
+            value={genero}
+            onChange={(e) => setGenero(e.target.value)}
+            required
+          >
+            {GENEROS.map((r) => (
+              <option key={r.value} value={r.value}>{r.label}</option>
+            ))}
+          </select>
+          {/*<input
             className={styles.input}
             id="edit-genero"
             type="text"
             value={genero}
-            onChange={(e) => setGenero(e.target.value)}
+            onChange={(e) => setGenero(e.target.value.toUpperCase())}
             required
-          />
+          />*/}
         </div>
         <div>
           <label className={styles.label} htmlFor="edit-edad">Edad</label>
@@ -529,7 +551,7 @@ function UserEditForm({
         onChange={(e) => setRole(e.target.value)}
       >
         {ROLES.map((r) => (
-          <option key={r} value={r}>{r}</option>
+          <option key={r.value} value={r.value}>{r.label}</option>
         ))}
       </select>
 
