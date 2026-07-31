@@ -42,8 +42,23 @@
   }
 
   .error {
-    color: #ff6b6b;
+    color: #fecaca;
     font-size: 15px;
+    margin-bottom: 12px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background-color: rgba(239, 68, 68, 0.16);
+    border: 1px solid rgba(248, 113, 113, 0.35);
+  }
+
+  .success {
+    color: #dcfce7;
+    font-size: 15px;
+    margin-bottom: 12px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background-color: rgba(34, 197, 94, 0.16);
+    border: 1px solid rgba(74, 222, 128, 0.35);
   }
   
   /* ============================================================
@@ -179,6 +194,25 @@
     color: #c49dfa;
   }
 
+  .confirmContent {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .confirmText {
+    margin: 0;
+    color: #f3f4f6;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .confirmActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
    /* ============================================================
                                   ACTION LINKS
         ============================================================ */
@@ -280,6 +314,22 @@
     width: auto;
     padding: 10px 20px;
     margin-top: 0;
+  }
+
+  .fieldError {
+    margin: -8px 0 12px;
+    color: #ff6b6b;
+    font-size: 12px;
+  }
+
+  .formError {
+    margin: 0 0 16px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background-color: rgba(239, 68, 68, 0.16);
+    border: 1px solid rgba(248, 113, 113, 0.35);
+    color: #fecaca;
+    font-size: 13px;
   }
 
   /* ============================================================

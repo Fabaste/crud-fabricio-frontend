@@ -1,25 +1,26 @@
 .container {
   display: flex;
-  height: 100vh;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0a0a0a 0%, #111 100%);
 }
 
-/* ============================================================
-                  LADO IZQUIERDO
-        ============================================================ */
 .left {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #0a0a0a;
   padding: 40px;
 }
 
 .form {
   width: 100%;
-  max-width: 360px;
+  max-width: 420px;
   display: flex;
   flex-direction: column;
+  padding: 32px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
 }
 
 .title {
@@ -32,7 +33,7 @@
 .subtitle {
   font-size: 14px;
   color: #888;
-  margin: 0 0 32px;
+  margin: 0 0 24px;
 }
 
 .label {
@@ -45,10 +46,10 @@
 .input {
   width: 100%;
   padding: 12px 16px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   background-color: #1a1a1a;
   border: 1px solid #333;
-  border-radius: 8px;
+  border-radius: 10px;
   color: #fff;
   font-size: 15px;
   box-sizing: border-box;
@@ -59,8 +60,14 @@
   border-color: #666;
 }
 
+.error {
+  font-size: 13px;
+  color: #ff6b6b;
+  margin: -4px 0 12px;
+}
+
 .footer {
-  margin-top: 24px;
+  margin-top: 20px;
   font-size: 14px;
   color: #888;
   text-align: center;
@@ -75,19 +82,36 @@
   text-decoration: underline;
 }
 
-/* ============================================================
-                  LADO DERECHO
-      ============================================================ */
 .right {
   flex: 1;
-  background-color: #e8e8e8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /*background: radial-gradient(circle at top left, #e879f9 0%, #f59e0b 40%, #fef3c7 100%);*/
+  padding: 10px;
 }
 
-/* ============================================================
-                  MOBILE
-    ============================================================ */
+.right img {
+  /*width: min(360px, 100%);*/
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+  object-fit: cover; /* Cubre todo el espacio recortando los bordes si es necesario */
+}
+
 @media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+
   .right {
     display: none;
+  }
+
+  .left {
+    padding: 20px;
+  }
+
+  .form {
+    padding: 24px;
   }
 }

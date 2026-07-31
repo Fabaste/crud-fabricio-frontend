@@ -27,7 +27,22 @@ function CreateUser() {
     setError(null)
     setLoading(true)
     try {
-      await createUser(nombre, apellido, email, password)
+      await createUser({
+        nombre,
+        apellido,
+        email,
+        password,
+        fechaNacimiento: '2000-01-01',
+        edad: 25,
+        genero: 'No especificado',
+        telefono: '0000000000',
+        direccion: 'Sin dirección',
+        codigoPostal: '0000',
+        localidad: 'Sin localidad',
+        provincia: 'Sin provincia',
+        pais: 'Argentina',
+        role: 'USER',
+      } as any)
       // Usuario creado → volvemos a la lista para verlo
       navigate({ to: '/' })
     } catch (error: any) {

@@ -1,104 +1,124 @@
 .container {
   display: flex;
-    height: 100vh;
-  }
-  
-  /* ============================================================
-                    LADO IZQUIERDO
-          ============================================================ */
-  .left {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #0a0a0a;
-    padding: 40px;
-  }
-  
-  .form {
-    width: 100%;
-    max-width: 360px;
-    display: flex;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0a0a0a 0%, #111 100%);
+}
+
+.left {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.form {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  padding: 32px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 8px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #888;
+  margin: 0 0 24px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #ccc;
+  margin-bottom: 6px;
+}
+
+.input {
+  width: 100%;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background-color: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 15px;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.input:focus {
+  border-color: #666;
+}
+
+.error {
+  font-size: 14px;
+  color: #ff6b6b;
+  margin: 0 0 16px;
+}
+
+.footer {
+  margin-top: 20px;
+  font-size: 14px;
+  color: #888;
+  text-align: center;
+}
+
+.footer a,
+.linkButton {
+  color: #fff;
+  text-decoration: none;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.footer a:hover,
+.linkButton:hover {
+  text-decoration: underline;
+}
+
+.right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /*background: radial-gradient(circle at top left, #60a5fa 0%, #5809e9 50%, #5809e9 100%);*/
+  padding: 10px;
+}
+
+.right img {
+  width: 100% !important;
+  height: 100%!important;
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+  object-fit: cover !important; /* Cubre todo el espacio recortando los bordes si es necesario */
+}
+
+@media (max-width: 768px) {
+  .container {
     flex-direction: column;
   }
-  
-  .title {
-    font-size: 28px;
-    font-weight: 700;
-    color: #ffffff;
-    margin: 0 0 8px;
-  }
-  
-  .subtitle {
-    font-size: 14px;
-    color: #888;
-    margin: 0 0 32px;
-  }
-  
-  .label {
-    font-size: 13px;
-    font-weight: 500;
-    color: #ccc;
-    margin-bottom: 6px;
-  }
-  
-  .input {
-    width: 100%;
-    padding: 12px 16px;
-    margin-bottom: 20px;
-    background-color: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 8px;
-    color: #fff;
-    font-size: 15px;
-    box-sizing: border-box;
-    outline: none;
-  }
-  
-  .input:focus {
-    border-color: #666;
-  }
-  
-  /* Mensaje de error de la API */
-  .error {
-    font-size: 14px;
-    color: #ff6b6b;
-    margin: 0 0 16px;
+
+  .right {
+    display: none;
   }
 
-  .footer {
-    margin-top: 24px;
-    font-size: 14px;
-    color: #888;
-    text-align: center;
+  .left {
+    padding: 20px;
   }
-  
-  .footer a {
-    color: #fff;
-    text-decoration: none;
+
+  .form {
+    padding: 24px;
   }
-  
-  .footer a:hover {
-    text-decoration: underline;
-  }
-  
-  /* ============================================================
-                    LADO DERECHO
-        ============================================================ */
-  .right {
-    flex: 1;
-    display: flex;
-    background-color: #e8e8e8;
-  }
-  
-  .animacion{
-    background-color: rgb(247, 141, 106);
-  }
-  /* ============================================================
-                    MOBILE
-      ============================================================ */
-  @media (max-width: 768px) {
-    .right {
-      display: none;
-    }
 }
