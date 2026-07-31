@@ -3,7 +3,7 @@ import styles from './DeleteButton.module.css'
 // Definición de las propiedades del componente
 interface DeleteButtonProps {
   children: React.ReactNode;
-  onClick: () => void;
+  onClick?: () => void;
   ariaLabel?: string;
   className?: string;
   disabled?: boolean;

@@ -94,7 +94,7 @@ function Home() {
     closeModal()
   }
   // 4. Función para eliminar el usuario por su ID
-  const handleDelete = (id: number, name: string) => {
+  const handleDelete = (id: string, name: string) => {
     // Confirmación de seguridad
     const confirmDelete = window.confirm(`¿Estás seguro de que deseas eliminar a ${name}?`);
     
@@ -220,7 +220,7 @@ function Home() {
                       >
                         Editar
                       </button>
-                      <DeleteButton onClick={handleDelete}>Borrar</DeleteButton>
+                      <DeleteButton onClick={handleDelete(user._id,user.nombre)}>Borrar</DeleteButton>
                     </div>
                   </td>
                 </tr>
