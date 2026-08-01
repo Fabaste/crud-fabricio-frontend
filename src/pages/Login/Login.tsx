@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import styles from './Login.module.css'
 import Button from '@/components/ui/Button/Button.tsx'
-import PasswordInput from '@/components/ui/PasswordInput/PasswordInput'
 import { login } from '@/api/login.ts'
 
 import logo from './assets/logoFRS.png'
@@ -58,9 +57,10 @@ function Login() {
           />
 
           <label className={styles.label} htmlFor="password">Contraseña</label>
-          <PasswordInput
+          <input
             className={styles.input}
             id="password"
+            type="password"
             placeholder="Contraseña"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -73,10 +73,6 @@ function Login() {
           <Button variant="primary" type="submit" disabled={loading}>
             {loading ? 'Ingresando...' : 'Iniciar Sesión'}
           </Button>
-
-          <p className={styles.footer}>
-            ¿No tenés cuenta? <button type="button" className={styles.linkButton} onClick={() => navigate({ to: '/register' })}>Registrarse</button>
-          </p>
         </form>
       </section>
 

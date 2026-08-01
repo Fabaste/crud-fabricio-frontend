@@ -2,13 +2,11 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import Button from '@/components/ui/Button/Button'
 import DeleteButton from '@/components/ui/DeleteButton/DeleteButton'
-import PasswordInput from '@/components/ui/PasswordInput/PasswordInput'
 import Modal from '@/components/blocks/Modal/Modal'
 import styles from './Home.module.css'
 import { getUsers } from '@/api/getUsers'
 import { updateUser } from '@/api/updateUser'
 import { createUser } from '@/api/createUser'
-import { deleteUser } from '@/api/deleteUser'
 import type { User } from '@/api/types'
 import { APIProvider, Map, Marker} from '@vis.gl/react-google-maps'
 import {KEY_MAPS} from '@/config/globals.ts'
@@ -27,74 +25,20 @@ const GENEROS = [
   {value:'F', label: 'Femenino'},
 ]
 
-function formatDateForInput(value?: string | Date | null) {
-  if (!value) return ''
-  const date = value instanceof Date ? value : new Date(value)
-  if (Number.isNaN(date.getTime())) return ''
-  return date.toISOString().slice(0, 10)
-}
-
-function formatDateForDisplay(value?: string | Date | null) {
-  if (!value) return '-'
-  const date = value instanceof Date ? value : new Date(value)
-  if (Number.isNaN(date.getTime())) return '-'
-  return date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-}
-
-function calculateAgeFromBirthDate(value?: string) {
-  if (!value) return ''
-  const birthDate = new Date(value)
-  if (Number.isNaN(birthDate.getTime())) return ''
-  const today = new Date()
-  let age = today.getFullYear() - birthDate.getFullYear()
-  const monthDiff = today.getMonth() - birthDate.getMonth()
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-    age -= 1
-  }
-  return String(age)
-}
 
 function Home() {
   const navigate = useNavigate()
 
   const [users, setUsers] = useState<User[]>([])
-  const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!successMessage) return
-
-    const timer = window.setTimeout(() => {
-      setSuccessMessage(null)
-    }, 2500)
-
-    return () => window.clearTimeout(timer)
-  }, [successMessage])
 
   // Usuario seleccionado para ver o editar en el modal
   const [modalUser, setModalUser] = useState<User | null>(null)
   const [modalMode, setModalMode] = useState<'view' | 'edit' | 'map' | 'create' | null>(null)
-  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
 
   //Localidad seleccionada para ver en Google Maps
   //const [modalLocalidad, setModalLocalidad] = useState<User | null>(null)
-
-  async function refreshUsers() {
-    try {
-      const data = await getUsers()
-      const normalizedUsers = Array.isArray(data) ? data : data ? [data] : []
-      setUsers(normalizedUsers)
-      const storedEmail = localStorage.getItem('userEmail') || ''
-      const me = normalizedUsers.find((user) => user.email === storedEmail) ?? null
-      setCurrentUser(me)
-    } catch (err: any) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   useEffect(() => {
     // Protección mínima de ruta: sin token no tiene sentido estar acá
@@ -102,7 +46,20 @@ function Home() {
       navigate({ to: '/login' })
       return
     }
-    refreshUsers()
+    // Pedimos los usuarios a la API al montar el componente
+    async function loadUsers() {
+      try {
+        const data = await getUsers()
+        //setUsers(data)
+        setUsers(Array.isArray(data) ? data : data ? [data] : []);
+      } catch (error: any) {
+        setError(error.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadUsers()
   }, [navigate])
 
   function handleLogout() {
@@ -132,48 +89,25 @@ function Home() {
     setModalUser(null)
   }
 
-  async function handleUserUpdated(updated: User, action: 'create' | 'edit' = 'edit') {
-    setError(null)
-    try {
-      await refreshUsers()
-      setCurrentPage(1)
-      setSuccessMessage(action === 'create' ? 'Usuario creado correctamente' : 'Usuario actualizado correctamente')
-    } catch (err: any) {
-      setError(err.message || 'No se pudo refrescar la tabla')
-    } finally {
-      closeModal()
-    }
+  function handleUserUpdated(updated: User) {
+    setUsers((prev) => prev.map((u) => (u._id === updated._id ? updated : u)))
+    closeModal()
   }
-
+  // 4. Función para eliminar el usuario por su ID
   const handleDelete = (id: string, name: string) => {
-    setDeleteTarget({ id, name })
-  }
-
-  const confirmDelete = async () => {
-    if (!deleteTarget) return
-
-    try {
-      await deleteUser(deleteTarget.id)
-      await refreshUsers()
-      setCurrentPage(1)
-      setDeleteTarget(null)
-      setError(null)
-      setSuccessMessage(`Usuario eliminado correctamente: ${deleteTarget.name}`)
-    } catch (err: any) {
-      setError(err.message || 'No se pudo eliminar el usuario')
-      setDeleteTarget(null)
-      setSuccessMessage(null)
+    // Confirmación de seguridad
+    const confirmDelete = window.confirm(`¿Estás seguro de que deseas eliminar a ${name}?`);
+    
+    if (confirmDelete) {
+      // Filtramos la lista para excluir al usuario eliminado
+      const updatedUsers = users.filter(user => user.id !== id);
+      setUsers(updatedUsers);
     }
   }
 
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const usersPerPage = 5;
-  const role = (localStorage.getItem('role') || 'USER').toUpperCase()
-  const isRoot = role === 'ROOT'
-  const isAdmin = role === 'ADMIN'
-  const isUser = role === 'USER'
-  const currentUserId = currentUser?._id || localStorage.getItem('userId') || ''
 
   // Lógica de filtrado (Se queda aquí para procesar los datos)
   //const filteredUsers = (users || []).filter((user) => {
@@ -195,39 +129,8 @@ function Home() {
     setCurrentPage(1); 
   };
 
-  const canViewUser = (user: User) => {
-    if (isRoot || isAdmin) return true
-    if (isUser) return user._id === currentUserId
-    return false
-  }
-
-  const canEditUser = (user: User) => {
-    if (isRoot) return true
-    if (isAdmin) return user.role !== 'ROOT' && user.role !== 'ADMIN'
-    if (isUser) return user._id === currentUserId
-    return false
-  }
-
-  const canDeleteUser = (user: User) => {
-    if (isRoot) return user._id !== currentUserId
-    if (isAdmin) return user.role !== 'ROOT' && user.role !== 'ADMIN' && user._id !== currentUserId
-    return false
-  }
-
   return (
     <main className={styles.container}>
-
-      {currentUser && (
-        <section className={styles.userCard}>
-          <div>
-            <p className={styles.userCardLabel}>Usuario logueado</p>
-            <h2 className={styles.userCardName}>{currentUser.nombre} {currentUser.apellido}</h2>
-          </div>
-          <span className={`${styles.badge} ${styles[`badge__${currentUser.role.toLowerCase()}`] ?? ''}`}>
-            {currentUser.role}
-          </span>
-        </section>
-      )}
 
       <div className={styles.header}>
         <h1 className={styles.title}>Usuarios</h1>
@@ -248,7 +151,6 @@ function Home() {
       {loading && <p className={styles.message}>Cargando usuarios...</p>}
 
       {error && <p className={styles.error}>{error}</p>}
-      {successMessage && <p className={styles.success}>{successMessage}</p>}
 
       {!loading && !error && users.length === 0 && (
         <p className={styles.message}>No hay usuarios para mostrar</p>
@@ -311,16 +213,14 @@ function Home() {
                   </td>
                   <td className={styles.td}>
                     <div className={styles.actions}>
-                      {canViewUser(user) && <button className={styles.actionBtn} onClick={() => openView(user)}>Ver</button>}
-                      {canEditUser(user) && (
-                        <button
-                          className={`${styles.actionBtn} ${styles.actionBtnEdit}`}
-                          onClick={() => openEdit(user)}
-                        >
-                          Editar
-                        </button>
-                      )}
-                      {canDeleteUser(user) && <DeleteButton onClick={() => handleDelete(user._id, user.nombre)}>Borrar</DeleteButton>}
+                      <button className={styles.actionBtn} onClick={() => openView(user)}>Ver</button>
+                      <button
+                        className={`${styles.actionBtn} ${styles.actionBtnEdit}`}
+                        onClick={() => openEdit(user)}
+                      >
+                        Editar
+                      </button>
+                      <DeleteButton onClick={handleDelete(user._id,user.nombre)}>Borrar</DeleteButton>
                     </div>
                   </td>
                 </tr>
@@ -336,22 +236,6 @@ function Home() {
           />
         </div>
       )}
-
-      <Modal
-        isOpen={deleteTarget !== null}
-        onClose={() => setDeleteTarget(null)}
-        title="Confirmar eliminación"
-      >
-        <div className={styles.confirmContent}>
-          <p className={styles.confirmText}>
-            ¿Deseas eliminar a <strong>{deleteTarget?.name}</strong>?
-          </p>
-          <div className={styles.confirmActions}>
-            <Button variant="secondary" onClick={() => setDeleteTarget(null)}>Cancelar</Button>
-            <Button variant="primary" onClick={confirmDelete}>Eliminar</Button>
-          </div>
-        </div>
-      </Modal>
 
       <Modal
         isOpen={modalMode !== null }
@@ -383,7 +267,7 @@ function UserDetails({ user }: { user: User }) {
     ['Rol', user.role],
     ['Género', user.genero],
     ['Edad', String(user.edad)],
-    ['Fecha de nacimiento', formatDateForDisplay(user.fechaNacimiento)],
+    ['Fecha de nacimiento', user.fechaNacimiento?.slice(0, 10)],
     ['Teléfono', user.telefono],
     ['Dirección', user.direccion],
     ['Localidad', user.localidad],
@@ -416,7 +300,7 @@ function UserEditForm({
 }: {
   user: User | null
   onCancel: () => void
-  onSaved: (user: User, action?: 'create' | 'edit') => void
+  onSaved: (user: User) => void
 }) {
   // 2. Usamos encadenamiento opcional (?.) y valores por defecto para el modo creación
   const [nombre, setNombre] = useState(user?.nombre ?? '')
@@ -424,7 +308,7 @@ function UserEditForm({
   const [email, setEmail] = useState(user?.email ?? '')
   const [genero, setGenero] = useState(user?.genero ?? GENEROS[0].value) //Genero inicial por defecto
   const [edad, setEdad] = useState(String(user?.edad ?? ''))
-  const [fechaNacimiento, setFechaNacimiento] = useState(formatDateForInput(user?.fechaNacimiento) ?? '')
+  const [fechaNacimiento, setFechaNacimiento] = useState(user?.fechaNacimiento?.slice(0, 10) ?? '')
   const [telefono, setTelefono] = useState(user?.telefono ?? '')
   const [direccion, setDireccion] = useState(user?.direccion ?? '')
   const [localidad, setLocalidad] = useState(user?.localidad ?? '')
@@ -432,8 +316,7 @@ function UserEditForm({
   const [pais, setPais] = useState(user?.pais ?? '')
   const [codigoPostal, setCodigoPostal] = useState(user?.codigoPostal ?? '')
   const [role, setRole] = useState(user?.role ?? ROLES[2].value) // Rol inicial por defecto
-  const [password, setPassword] = useState('')
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   // 3. Identificamos si estamos editando o creando
@@ -466,97 +349,12 @@ function UserEditForm({
     }
   }*/
 
-  function validateField(field: string, value: string) {
-    const nextErrors = { ...errors }
-
-    switch (field) {
-      case 'nombre':
-        if (!value.trim()) nextErrors.nombre = 'El nombre es obligatorio'
-        else if (value.trim().length < 2) nextErrors.nombre = 'Debe tener al menos 2 caracteres'
-        else delete nextErrors.nombre
-        break
-      case 'apellido':
-        if (!value.trim()) nextErrors.apellido = 'El apellido es obligatorio'
-        else if (value.trim().length < 2) nextErrors.apellido = 'Debe tener al menos 2 caracteres'
-        else delete nextErrors.apellido
-        break
-      case 'email':
-        if (!value.trim()) nextErrors.email = 'El email es obligatorio'
-        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) nextErrors.email = 'El formato del email es inválido'
-        else delete nextErrors.email
-        break
-      case 'genero':
-        if (!value.trim()) nextErrors.genero = 'El género es obligatorio'
-        else delete nextErrors.genero
-        break
-      case 'edad':
-        if (!value) nextErrors.edad = 'La edad es obligatoria'
-        else if (Number(value) < 1 || Number(value) > 120) nextErrors.edad = 'La edad debe estar entre 1 y 120'
-        else delete nextErrors.edad
-        break
-      case 'fechaNacimiento':
-        if (!value) nextErrors.fechaNacimiento = 'La fecha es obligatoria'
-        else delete nextErrors.fechaNacimiento
-        break
-      case 'telefono':
-        if (!value.trim()) nextErrors.telefono = 'El teléfono es obligatorio'
-        else if (value.trim().length < 6) nextErrors.telefono = 'Debe tener al menos 6 caracteres'
-        else delete nextErrors.telefono
-        break
-      case 'direccion':
-        if (!value.trim()) nextErrors.direccion = 'La dirección es obligatoria'
-        else delete nextErrors.direccion
-        break
-      case 'localidad':
-        if (!value.trim()) nextErrors.localidad = 'La localidad es obligatoria'
-        else delete nextErrors.localidad
-        break
-      case 'provincia':
-        if (!value.trim()) nextErrors.provincia = 'La provincia es obligatoria'
-        else delete nextErrors.provincia
-        break
-      case 'pais':
-        if (!value.trim()) nextErrors.pais = 'El país es obligatorio'
-        else delete nextErrors.pais
-        break
-      case 'codigoPostal':
-        if (!value.trim()) nextErrors.codigoPostal = 'El código postal es obligatorio'
-        else delete nextErrors.codigoPostal
-        break
-      case 'password':
-        if (!isEditing && !value.trim()) nextErrors.password = 'La contraseña es obligatoria'
-        else if (value && value.length < 6) nextErrors.password = 'Debe tener al menos 6 caracteres'
-        else delete nextErrors.password
-        break
-      default:
-        break
-    }
-
-    setErrors(nextErrors)
-  }
-
-  function normalizeBackendError(error: any) {
-    const rawMessage = error?.message || ''
-
-    if (typeof rawMessage === 'string') {
-      if (rawMessage.includes('"nombre"')) return 'El nombre debe tener al menos 2 caracteres.'
-      if (rawMessage.includes('"apellido"')) return 'El apellido debe tener al menos 2 caracteres.'
-      if (rawMessage.includes('"email"')) return 'El email no tiene un formato válido.'
-      if (rawMessage.includes('"password"')) return 'La contraseña debe tener al menos 6 caracteres.'
-      if (rawMessage.includes('"edad"')) return 'La edad debe ser un número válido.'
-      if (rawMessage.includes('"telefono"')) return 'El teléfono debe tener al menos 6 caracteres.'
-      if (rawMessage.includes('"role"')) return 'El rol seleccionado no es válido.'
-      if (rawMessage.includes('Invalid status code')) return 'No se pudo guardar el usuario. Revisa los datos ingresados.'
-    }
-
-    return rawMessage || 'No se pudo guardar el usuario.'
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setErrors({})
+    setError(null)
     setLoading(true)
 
+    // 1. Agrupamos los datos base que comparten ambos modos
     const userData = {
       nombre,
       apellido,
@@ -576,19 +374,17 @@ function UserEditForm({
       let savedUser: User
 
       if (isEditing && user) {
-        const updatePayload = {
-          ...userData,
-          ...(password ? { password } : {}),
-        }
-        savedUser = await updateUser(user._id, updatePayload as any)
+        // Modo Edición: Se envían solo los datos base (sin email)
+        savedUser = await updateUser(user._id, userData)
       } else {
-        const newUserData = { ...userData, email, password }
-        savedUser = await createUser(newUserData as any)
+        // Modo Creación: Combinamos los datos base con el email usando el operador spread (...)
+        const newUserData = { ...userData, email }
+        savedUser = await createUser(newUserData)
       }
 
-      onSaved(savedUser, isEditing ? 'edit' : 'create')
+      onSaved(savedUser)
     } catch (error: any) {
-      setErrors({ form: normalizeBackendError(error) })
+      setError(error.message)
     } finally {
       setLoading(false)
     }
@@ -604,13 +400,9 @@ function UserEditForm({
             id="edit-nombre"
             type="text"
             value={nombre}
-            onChange={(e) => {
-              setNombre(e.target.value)
-              validateField('nombre', e.target.value)
-            }}
+            onChange={(e) => setNombre(e.target.value)}
             required
           />
-          {errors.nombre && <p className={styles.fieldError}>{errors.nombre}</p>}
         </div>
         <div>
           <label className={styles.label} htmlFor="edit-apellido">Apellido</label>
@@ -619,13 +411,9 @@ function UserEditForm({
             id="edit-apellido"
             type="text"
             value={apellido}
-            onChange={(e) => {
-              setApellido(e.target.value)
-              validateField('apellido', e.target.value)
-            }}
+            onChange={(e) => setApellido(e.target.value)}
             required
           />
-          {errors.apellido && <p className={styles.fieldError}>{errors.apellido}</p>}
         </div>
       </div>
 
@@ -636,10 +424,7 @@ function UserEditForm({
             className={styles.select}
             id="edit-genero"
             value={genero}
-            onChange={(e) => {
-              setGenero(e.target.value)
-              validateField('genero', e.target.value)
-            }}
+            onChange={(e) => setGenero(e.target.value)}
             required
           >
             {GENEROS.map((r) => (
@@ -656,10 +441,9 @@ function UserEditForm({
             min={1}
             max={120}
             value={edad}
-            readOnly
+            onChange={(e) => setEdad(e.target.value)}
             required
           />
-          {errors.edad && <p className={styles.fieldError}>{errors.edad}</p>}
         </div>
       </div>
 
@@ -671,15 +455,9 @@ function UserEditForm({
             id="edit-fechaNacimiento"
             type="date"
             value={fechaNacimiento}
-            onChange={(e) => {
-              const nextValue = e.target.value
-              setFechaNacimiento(nextValue)
-              setEdad(calculateAgeFromBirthDate(nextValue))
-              validateField('fechaNacimiento', nextValue)
-            }}
+            onChange={(e) => setFechaNacimiento(e.target.value)}
             required
           />
-          {errors.fechaNacimiento && <p className={styles.fieldError}>{errors.fechaNacimiento}</p>}
         </div>
         <div>
           <label className={styles.label} htmlFor="edit-telefono">Teléfono</label>
@@ -688,13 +466,9 @@ function UserEditForm({
             id="edit-telefono"
             type="text"
             value={telefono}
-            onChange={(e) => {
-              setTelefono(e.target.value)
-              validateField('telefono', e.target.value)
-            }}
+            onChange={(e) => setTelefono(e.target.value)}
             required
           />
-          {errors.telefono && <p className={styles.fieldError}>{errors.telefono}</p>}
         </div>
       </div>
 
@@ -706,14 +480,10 @@ function UserEditForm({
             id="edit-email"
             type="email"
             value={email}
-            onChange={(e) => {
-              setEmail(e.target.value)
-              validateField('email', e.target.value)
-            }}
+            onChange={(e) => setEmail(e.target.value)}
             placeholder="tu@correo.com"
             required
           />
-          {errors.email && <p className={styles.fieldError}>{errors.email}</p>}
         </div>
         <div>
           <label className={styles.label} htmlFor="edit-direccion">Dirección</label>
@@ -722,13 +492,9 @@ function UserEditForm({
             id="edit-direccion"
             type="text"
             value={direccion}
-            onChange={(e) => {
-              setDireccion(e.target.value)
-              validateField('direccion', e.target.value)
-            }}
+            onChange={(e) => setDireccion(e.target.value)}
             required
           />
-          {errors.direccion && <p className={styles.fieldError}>{errors.direccion}</p>}
         </div>
       </div>
 
@@ -740,13 +506,9 @@ function UserEditForm({
             id="edit-localidad"
             type="text"
             value={localidad}
-            onChange={(e) => {
-              setLocalidad(e.target.value)
-              validateField('localidad', e.target.value)
-            }}
+            onChange={(e) => setLocalidad(e.target.value)}
             required
           />
-          {errors.localidad && <p className={styles.fieldError}>{errors.localidad}</p>}
         </div>
         <div>
           <label className={styles.label} htmlFor="edit-provincia">Provincia</label>
@@ -755,13 +517,9 @@ function UserEditForm({
             id="edit-provincia"
             type="text"
             value={provincia}
-            onChange={(e) => {
-              setProvincia(e.target.value)
-              validateField('provincia', e.target.value)
-            }}
+            onChange={(e) => setProvincia(e.target.value)}
             required
           />
-          {errors.provincia && <p className={styles.fieldError}>{errors.provincia}</p>}
         </div>
       </div>
 
@@ -773,13 +531,9 @@ function UserEditForm({
             id="edit-pais"
             type="text"
             value={pais}
-            onChange={(e) => {
-              setPais(e.target.value)
-              validateField('pais', e.target.value)
-            }}
+            onChange={(e) => setPais(e.target.value)}
             required
           />
-          {errors.pais && <p className={styles.fieldError}>{errors.pais}</p>}
         </div>
         <div>
           <label className={styles.label} htmlFor="edit-codigoPostal">Código postal</label>
@@ -788,51 +542,25 @@ function UserEditForm({
             id="edit-codigoPostal"
             type="text"
             value={codigoPostal}
-            onChange={(e) => {
-              setCodigoPostal(e.target.value)
-              validateField('codigoPostal', e.target.value)
-            }}
+            onChange={(e) => setCodigoPostal(e.target.value)}
             required
           />
-          {errors.codigoPostal && <p className={styles.fieldError}>{errors.codigoPostal}</p>}
         </div>
       </div>
 
-      <div className={styles.formRow}>
-        <div>
-          <label className={styles.label} htmlFor="edit-password">Contraseña</label>
-          <PasswordInput
-            className={styles.input}
-            id="edit-password"
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value)
-              validateField('password', e.target.value)
-            }}
-            placeholder={isEditing ? 'Dejar vacío para no cambiar' : '••••••••'}
-          />
-          {errors.password && <p className={styles.fieldError}>{errors.password}</p>}
-        </div>
+      <label className={styles.label} htmlFor="edit-role">Rol</label>
+      <select
+        className={styles.select}
+        id="edit-role"
+        value={role}
+        onChange={(e) => setRole(e.target.value)}
+      >
+        {ROLES.map((r) => (
+          <option key={r.value} value={r.value}>{r.label}</option>
+        ))}
+      </select>
 
-        <div>
-          <label className={styles.label} htmlFor="edit-role">Rol</label>
-          <select
-            className={styles.select}
-            id="edit-role"
-            value={role}
-            onChange={(e) => {
-              setRole(e.target.value)
-              validateField('role', e.target.value)
-            }}
-          >
-            {ROLES.map((r) => (
-              <option key={r.value} value={r.value}>{r.label}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {errors.form && <p className={styles.formError}>{errors.form}</p>}
+      {error && <p className={styles.error}>{error}</p>}
 
       <div className={styles.modalActions}>
         <Button variant="secondary" type="button" onClick={onCancel}>Cancelar</Button>

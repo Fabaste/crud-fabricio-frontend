@@ -2,7 +2,7 @@ import { createRouter, createRoute, createRootRoute, Outlet } from '@tanstack/re
 
 import Home from '@/pages/Home/Home'
 import Login from '@/pages/Login/Login'
-import Register from '@/pages/Register/Register'
+//import Register from '@/pages/Register/Register'
 import CreateUser from '@/pages/CreateUser/CreateUser'
 
 const rootRoute = createRootRoute({
@@ -21,11 +21,11 @@ const loginRoute = createRoute({
   component: Login,
 })
 
-const registerRoute = createRoute({
+/*const registerRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/register',
   component: Register,
-})
+})*/
 
 const createUserRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -36,7 +36,7 @@ const createUserRoute = createRoute({
 const routeTree = rootRoute.addChildren([
   homeRoute,
   loginRoute,
-  registerRoute,
+  //registerRoute,
   createUserRoute,
 ])
 
