@@ -7,7 +7,9 @@ import Button from '@/components/ui/Button/Button.tsx'
 import PasswordInput from '@/components/ui/PasswordInput/PasswordInput'
 import { login } from '@/api/login.ts'
 
-import logo from '@/assets/logoFRS.png'
+import logo from './assets/logoFRS.png'
+import 'devicon/devicon.min.css';
+
 
 function Login() {
   const navigate = useNavigate()
@@ -78,14 +80,28 @@ function Login() {
         </form>
       </section>
 
-            <section className={styles.right}>
-                <div>
-                  <img src= {logo} alt="Imagen publicitaria" />
-                </div>
-            </section>
+      <section className={styles.right}>
+        <div className={styles.adsContent}>
+          <img className={styles.promoLogo} src= {logo} alt="Logo" />
+          <div className={styles.adsText}>
+            <h5>INGENIERIA DE SOFTWARE</h5>
+          </div>
+        </div>
+        <div className={styles.stackFooter}>
+          <img className={`${styles.stackIcon} ${styles.mongodb}`} src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/mongodb/default.svg" title="MongoDB" alt="MongoDB" />
+          <img className={`${styles.stackIcon} ${styles.react}`} src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/react/default.svg" title="React" alt="React" />
+          <img className={`${styles.stackIcon} ${styles.typescript}`} src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/typescript/default.svg" title="TypeScript" alt="TypeScript" />
+          <img className={`${styles.stackIcon} ${styles.node}`} src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/nodejs/wordmark.svg" title="Node.js" alt="Node.js" />
+          <img className={`${styles.stackIcon} ${styles.express}`} src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/expressdotjs/light.svg" title="Express.js" alt="Express.js" />
+          <img className={`${styles.stackIcon} ${styles.vite}`} src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/vite/default.svg" title="Vite" alt="Vite" />
+          <img className={`${styles.stackIcon} ${styles.cssmodules}`} src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/css-new/default.svg" title="CSS Modules" alt="CSS Modules" />
+          <img className={`${styles.stackIcon} ${styles.tanstack}`} src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/tanstack/default.svg" title="TanStack" alt="TanStack" />
+          <img className={`${styles.stackIcon} ${styles.javascript}`} src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/javascript/default.svg" title="JavaScript" alt="JavaScript" />
+        </div>
+      </section>
 
-        </main>
-    )
+    </main>
+  )
 }
 
 export default Login

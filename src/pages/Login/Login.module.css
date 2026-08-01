@@ -21,6 +21,22 @@
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.04);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  opacity: 0; /* Inicia invisible */
+  transform: translateX(-50px); /* Inicia 50 píxeles más a la izquierda */
+  animation: slideInLeft 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  animation-delay: 0.2s;
+}
+
+/* DECLARACIÓN DE KEYFRAMES DE IZQUIERDA A DERECHA */
+@keyframes slideInLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0); /* Llega a su posición original */
+  }
 }
 
 .title {
@@ -73,7 +89,6 @@
   text-align: center;
 }
 
-.footer a,
 .linkButton {
   color: #fff;
   text-decoration: none;
@@ -83,26 +98,91 @@
   cursor: pointer;
 }
 
-.footer a:hover,
 .linkButton:hover {
   text-decoration: underline;
 }
 
 .right {
-  flex: 1;
-  display: flex;
+  /*flex: 1;
+  background-color: #fcfbfa;*/
+  /*background-image: url(./assets/fondo-del-oro-52390663.webp);*/
+  /*display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  /*background: radial-gradient(circle at top left, #60a5fa 0%, #5809e9 50%, #5809e9 100%);*/
-  padding: 10px;
+  padding: 60px 40px;
+  text-align: center;
+  position: relative;*/
+
+
+
+  flex: 1;
+  /* Fondo base degradado cálido 
+  background: linear-gradient(135deg, #eab308 0%, #ca8a04 50%, #854d0e 100%);
+  background-color: #bfa530;*/
+  background: radial-gradient(circle at 15% 15%, #fce96c 0%, #b29522 55%, #756010 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 60px 40px;
+  text-align: center;
+  position: relative;
+  overflow: hidden; /* Evita que los polígonos se salgan de la pantalla */
 }
 
-.right img {
-  width: 100% !important;
-  height: 100%!important;
+.right::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* Primer polígono diagonal grande cruzado */
+  background: linear-gradient(195deg, rgba(255, 255, 255, 0.12) 0%, transparent 70%);
+  clip-path: polygon(0 0, 100% 0, 100% 40%, 0 52%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.right::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* Segundo polígono inferior invertido que genera los cruces de líneas 
+  background: linear-gradient(45deg, rgba(0, 0, 0, 0.15) 0%, transparent 60%);*/
+  background: linear-gradient(to bottom, rgba(82, 67, 13, 0.4), rgba(71, 58, 11, 0.5));
+  clip-path: polygon(0 75.5%, 100% 54.5%, 100% 100%, 0 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.adsContent,
+.stackFooter {
+  position: relative;
+  z-index: 2; /* Salta al frente de las figuras geométricas */
+}
+
+.promoLogo {
+  /*position: absolute;
+  width: 50%;
+  height: 100%;
   border-radius: 24px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
-  object-fit: cover !important; /* Cubre todo el espacio recortando los bordes si es necesario */
+  justify-content: center;*/
+  /*box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);*/
+  /*object-fit: cover;
+  background-color: transparent; */
+  width: 100%;
+  max-width: 500px;
+  height: auto;
+  margin-bottom: 5px;
+  transform: scale(0); /* Inicia invisible/pequeño */
+  animation: popIn 1.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation-delay: 0.2s; 
+  filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.05));
 }
 
 @media (max-width: 768px) {
@@ -122,3 +202,99 @@
     padding: 24px;
   }
 }
+
+.adsContent {
+    max-width: 480px;
+    margin-top: auto; 
+    margin-bottom: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: 140px;
+}
+
+.adsText {
+    transform: scale(0); /* Inicia invisible/pequeño */
+    animation: popIn 1.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    animation-delay: 0.4s; /* Entra después del logo */
+}
+
+.adsText h5 {
+    /*font-size: 32px;
+    margin-bottom: 15px;*/
+  font-family: 'Lexend', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-top: 10px;
+  /* El color azul marino exacto de tu logo FRS para perfecta armonía corporativa */
+  color: #0b3168; 
+  text-shadow: 0 2px 4px rgba(255, 255, 255, 0.2);
+}
+
+
+
+
+.stackFooter {
+  width: 100%;
+  max-width: 700px;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding-top: 25px;
+  border-top: 1px solid rgba(15, 23, 42, 0.06); 
+  /*transform: scale(0);
+  animation: popIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation-delay: 1.1s;*/
+  margin-bottom: 20px;
+}
+
+.stackIcon {
+    /*width: 48px; 
+    height: 48px;*/
+    width: auto;  /* Controla el tamaño de la imagen */
+    height: 48px; /* Asegura un contenedor cuadrado para los logos */
+    object-fit: contain; /* Evita que los logos se estiren o distorsionen */
+    cursor: pointer;
+    /*justify-content: space-between;*/
+    display: inline-block;
+    transform: scale(0); /* Inician en cero para ejecutar la animación */
+    
+    /* Animación sincronizada para que entren todos a la vez */
+    animation: popIn 3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    animation-delay: 1.2s; /* Ajusta el tiempo de retraso según sea necesario */
+    
+    /* Transición suave para el efecto hover */
+    transition: filter 0.2s ease, transform 0.2s ease;
+}
+
+
+/* 4. ANIMACIÓN DE PEQUEÑO A GRANDE (POP-IN) */
+@keyframes popIn {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.mongodb:hover { filter: drop-shadow(0px 4px 12px rgba(255,65,84)); transform: translateY(-5px) scale(1.1); }
+.express:hover { filter: drop-shadow(0 4px 12px rgba(255,65,84)); transform: translateY(-5px) scale(1.1); }
+.react:hover { filter: drop-shadow(0px 4px 12px rgba(255,65,84)); transform: translateY(-5px) scale(1.1); } 
+.node:hover { filter: drop-shadow(0px 4px 12px rgba(255,65,84)); transform: translateY(-5px) scale(1.1); }
+.typescript:hover { filter: drop-shadow(0px 4px 12px rgba(255,65,84)); transform: translateY(-5px) scale(1.1); }
+.cssmodules:hover { filter: drop-shadow(0px 0px 12px rgba(255,65,84)); transform: translateY(-5px) scale(1.1); }
+.vite:hover { filter: drop-shadow(0px 4px 12px rgba(255,65,84)); transform: translateY(-5px) scale(1.1); }
+.tanstack:hover { filter: drop-shadow(0 4px 12px rgba(255,65,84)); transform: translateY(-5px) scale(1.1); }
+.javascript:hover { filter: drop-shadow(0 4px 12px rgba(255,65,84)); transform: translateY(-5px) scale(1.1); }
+
+
+
+
+
