@@ -8,6 +8,7 @@ import { login } from '@/api/login.ts'
 
 import logo from './assets/logoFRS.png'
 import 'devicon/devicon.min.css';
+import PasswordInput from '@/components/ui/Input/PasswordInput'
 
 
 function Login() {
@@ -57,15 +58,13 @@ function Login() {
           />
 
           <label className={styles.label} htmlFor="password">Contraseña</label>
-          <input
-            className={styles.input}
-            id="password"
-            type="password"
-            placeholder="Contraseña"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+          <PasswordInput 
+            className={styles.input} 
+            id="password" 
+            placeholder="••••••••" 
+            value={password} 
+            onChange={(e) => setPassword(e.target.value)} 
+            required />
 
           {/* Mensaje de error que viene del backend */}
           {error && <p className={styles.error}>{error}</p>}
@@ -73,6 +72,11 @@ function Login() {
           <Button variant="primary" type="submit" disabled={loading}>
             {loading ? 'Ingresando...' : 'Iniciar Sesión'}
           </Button>
+
+          <p className={styles.footer}>
+            ¿No tenés cuenta? <button type="button" className={styles.linkButton} onClick={() => navigate({ to: '/register' })}>Registrarse</button>
+          </p>
+          
         </form>
       </section>
 

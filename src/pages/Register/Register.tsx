@@ -1,13 +1,107 @@
-import { Link } from '@tanstack/react-router'
+//import { Link } from '@tanstack/react-router'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate } from '@tanstack/react-router'
 import styles from './Register.module.css'
 import Button from '@/components/ui/Button/Button'
+import PasswordInput from '@/components/ui/Input/PasswordInput'
+import { registerUser } from '@/api/register'
+
+import logo from '../Login/assets/logoFRS.png'
+import { Country, State, City, ICountry, IState, ICity  } from 'country-state-city';
+
+const GENEROS = [
+  { value: "", label: "Selecciona un género..." },  
+  { value: 'M', label: 'Masculino' },
+  { value: 'F', label: 'Femenino' },
+  { value: 'X', label: 'Otros' },
+]
 
 function Register() {
+  const [nombre, setNombre] = useState('')
+  const [apellido, setApellido] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [genero, setGenero] = useState('')
+  const [fechaNacimiento, setFechaNacimiento] = useState('')
+  const [edad, setEdad] = useState('')
+  const [telefono, setTelefono] = useState('')
+  const [direccion, setDireccion] = useState('')
+  const [pais, setPais] = useState<string>('')
+  const [provincia, setProvincia] = useState<string>('')
+  const [localidad, setLocalidad] = useState<string>('')
+  const [codigoPostal, setCodigoPostal] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
+
+  const [paises, setPaises] = useState<ICountry[]>([]);
+  const [provincias, setProvincias] = useState<IState[]>([]);
+  const [localidades, setLocalidades] = useState<ICity[]>([]);
+
+
+  // 1. Cargar todos los países al montar el componente
+  useEffect(() => {
+    setPaises(Country.getAllCountries());
+  }, []);
+
+  // 2. Escuchar cuando cambie el país para cargar sus provincias/estados
+  useEffect(() => {
+    if (pais) {
+      setProvincias(State.getStatesOfCountry(pais));
+      setLocalidades([]); // Resetear localidades previas
+      setProvincia('');
+    } else {
+      setProvincias([]);
+      setLocalidades([]);
+    }
+  }, [pais]);
+
+  // 3. Escuchar cuando cambie la provincia para cargar sus ciudades/localidades
+  useEffect(() => {
+    if (pais && provincia) {
+      setLocalidades(City.getCitiesOfState(pais, provincia));
+    } else {
+      setLocalidades([]);
+    }
+  }, [pais, provincia]);
+
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError(null)
+    setLoading(true)
+
+    try {
+      await registerUser({
+        nombre,
+        apellido,
+        email,
+        password,
+        fechaNacimiento,
+        edad: Number(edad),
+        genero,
+        telefono,
+        direccion,
+        codigoPostal,
+        localidad,
+        provincia,
+        pais,
+        role: 'USER',
+      } as any)
+
+      navigate({ to: '/login' })
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <main className={styles.container}>
 
       <section className={styles.left}>
-        <div className={styles.form}>
+        <form className={styles.form} onSubmit={handleSubmit}>
           <h1 className={styles.title}>Crear Cuenta</h1>
           <p className={styles.subtitle}>Completá tus datos para registrarte</p>
 
@@ -32,8 +126,7 @@ function Register() {
               <PasswordInput className={styles.input} id="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required />
             </div>
           </div>
- 
-          <div className={styles.formRow}>
+          <div className={`${styles.formRow} ${styles.inputBox}`}>
             <div>        
               <label className={styles.label} htmlFor="genero">Género</label>
               <select className={styles.input} id="genero" value={genero} onChange={(e) => setGenero(e.target.value)} required>
@@ -42,7 +135,7 @@ function Register() {
                 ))}
               </select>
             </div>
-            <div>
+            <div> 
               <label className={styles.label} htmlFor="fechaNacimiento">Fecha de nacimiento</label>
               <input className={styles.input} id="fechaNacimiento" type="date" value={fechaNacimiento} onChange={(e) => {
                 const nextValue = e.target.value
@@ -77,16 +170,19 @@ function Register() {
             </div>
             <div>
               <label className={styles.label} htmlFor="pais">País</label>
-              <select className={styles.input} id="pais" value={pais} onChange={(e) => {
-                const nextPais = e.target.value
-                const nextProvincia = PROVINCIAS_POR_PAIS[nextPais]?.[0]?.value ?? ''
-                const nextLocalidad = LOCALIDADES_POR_PROVINCIA[nextProvincia]?.[0]?.value ?? ''
-                setPais(nextPais)
-                setProvincia(nextProvincia)
-                setLocalidad(nextLocalidad)
-                setCodigoPostal(CODIGOS_POSTALES[nextPais]?.[nextProvincia]?.[nextLocalidad] ?? '')
-              }} required>
-                {PAISES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+              {/*<input className={styles.input} id="pais" type="text" placeholder="Argentina" value={pais} onChange={(e) => setPais(e.target.value)} required />*/}
+              <select 
+                className={styles.input}
+                value={pais} 
+                onChange={(e) => setPais(e.target.value)}
+              >
+                <option value="">Selecciona un país</option>
+                {paises.map((p) => (
+                  <option key={p.isoCode} value={p.isoCode}>
+                    {p.name}
+                    {/*{p.flag} {p.name}*/}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -94,43 +190,81 @@ function Register() {
           <div className={styles.formRow}>
             <div> 
               <label className={styles.label} htmlFor="provincia">Provincia</label>
-              <select className={styles.input} id="provincia" value={provincia} onChange={(e) => {
-                const nextProvincia = e.target.value
-                const nextLocalidad = LOCALIDADES_POR_PROVINCIA[nextProvincia]?.[0]?.value ?? ''
-                setProvincia(nextProvincia)
-                setLocalidad(nextLocalidad)
-                setCodigoPostal(CODIGOS_POSTALES[pais]?.[nextProvincia]?.[nextLocalidad] ?? '')
-              }} required>
-                {PROVINCIAS_POR_PAIS[pais]?.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+              {/*<input className={styles.input} id="provincia" type="text" placeholder="Buenos Aires" value={provincia} onChange={(e) => setProvincia(e.target.value)} required />*/}
+              <select 
+                className={styles.input}
+                value={provincia} 
+                onChange={(e) => setProvincia(e.target.value)}
+                disabled={!pais}
+              >
+                <option value="">Selecciona una provincia</option>
+                {provincias.map((p) => (
+                  <option key={p.isoCode} value={p.isoCode}>
+                    {p.name}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
               <label className={styles.label} htmlFor="localidad">Localidad</label>
-              <select className={styles.input} id="localidad" value={localidad} onChange={(e) => {
-                const nextLocalidad = e.target.value
-                setLocalidad(nextLocalidad)
-                setCodigoPostal(CODIGOS_POSTALES[pais]?.[provincia]?.[nextLocalidad] ?? '')
-              }} required>
-                {LOCALIDADES_POR_PROVINCIA[provincia]?.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+              {/*<input className={styles.input} id="localidad" type="text" placeholder="Ciudad de Buenos Aires" value={localidad} onChange={(e) => setLocalidad(e.target.value)} required />*/}
+              <select 
+                className={styles.input}
+                value={localidad} 
+                disabled={!provincia}
+                onChange={(e) => setLocalidad(e.target.value)}
+              >
+                <option value="">Selecciona una localidad</option>
+                {localidades.map((l) => (
+                  <option key={l.name} value={l.name}>
+                    {l.name}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
 
           <div className={styles.formRow}>
-            <label className={styles.label} htmlFor="codigoPostal">Código postal</label>
-            <input className={styles.input} id="codigoPostal" type="text" value={codigoPostal} readOnly required />
+            <div>
+              <label className={styles.label} htmlFor="codigoPostal">Código postal</label>
+              <input className={styles.input} id="codigoPostal" type="text" value={codigoPostal} onChange={(e) => setCodigoPostal(e.target.value)} required />
+            </div>
+            <div>
+              <label className={`${styles.label} ${styles.visuallyHidden}`} htmlFor="role">Role</label>
+              <input className={`${styles.input} ${styles.visuallyHidden}`} id="role" type="text" value= "USER" required />
+            </div>
           </div>
           {error && <p className={styles.error}>{error}</p>}
 
-          <Button variant="primary" type="submit">Registrarse</Button>
+          <Button variant="primary" type="submit" disabled={loading}>
+            {loading ? 'Registrando...' : 'Registrarse'}
+          </Button>
 
           <p className={styles.footer}>
             ¿Ya tenés cuenta? <Link to="/login">Iniciá sesión</Link>
           </p>
-        </div>
+        </form>
       </section>
 
-      <section className={styles.right}></section>
+      <section className={styles.right}>
+        <div className={styles.adsContent}>
+          <img className={styles.promoLogo} src= {logo} alt="Logo" />
+          <div className={styles.adsText}>
+            <h5>INGENIERIA DE SOFTWARE</h5>
+          </div>
+        </div>
+        <div className={styles.stackFooter}>
+          <img className={`${styles.stackIcon} ${styles.mongodb}`} src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/mongodb/default.svg" title="MongoDB" alt="MongoDB" />
+          <img className={`${styles.stackIcon} ${styles.react}`} src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/react/default.svg" title="React" alt="React" />
+          <img className={`${styles.stackIcon} ${styles.typescript}`} src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/typescript/default.svg" title="TypeScript" alt="TypeScript" />
+          <img className={`${styles.stackIcon} ${styles.node}`} src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/nodejs/wordmark.svg" title="Node.js" alt="Node.js" />
+          <img className={`${styles.stackIcon} ${styles.express}`} src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/expressdotjs/light.svg" title="Express.js" alt="Express.js" />
+          <img className={`${styles.stackIcon} ${styles.vite}`} src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/vite/default.svg" title="Vite" alt="Vite" />
+          <img className={`${styles.stackIcon} ${styles.cssmodules}`} src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/css-new/default.svg" title="CSS Modules" alt="CSS Modules" />
+          <img className={`${styles.stackIcon} ${styles.tanstack}`} src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/tanstack/default.svg" title="TanStack" alt="TanStack" />
+          <img className={`${styles.stackIcon} ${styles.javascript}`} src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/javascript/default.svg" title="JavaScript" alt="JavaScript" />
+        </div>
+      </section>
 
     </main>
   )

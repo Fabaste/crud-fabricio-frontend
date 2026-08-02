@@ -8,6 +8,7 @@ function Navigation () {
             <Link to="/">Home</Link>
             <Link to="/login">Login</Link>
             <Link to="/createUser">CreateUser</Link>
+            <Link to="/register">Register</Link>
         </nav>
     )
 }

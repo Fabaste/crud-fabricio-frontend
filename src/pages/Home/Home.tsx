@@ -220,7 +220,7 @@ function Home() {
                       >
                         Editar
                       </button>
-                      <DeleteButton onClick={handleDelete(user._id,user.nombre)}>Borrar</DeleteButton>
+                      {/*<DeleteButton onClick={handleDelete(user._id,user.nombre)}>Borrar</DeleteButton>*/}
                     </div>
                   </td>
                 </tr>
