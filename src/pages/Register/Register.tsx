@@ -6,11 +6,12 @@ import Button from '@/components/ui/Button/Button'
 import PasswordInput from '@/components/ui/Input/PasswordInput'
 import { registerUser } from '@/api/register'
 
+import toast, { Toaster } from 'react-hot-toast';
 import logo from '../Login/assets/logoFRS.png'
 import { Country, State, City, ICountry, IState, ICity  } from 'country-state-city';
 
 const GENEROS = [
-  { value: "", label: "Selecciona un género..." },  
+  { value: "", disabled: true, selected: true, label: "Selecciona un género..." },  
   { value: 'M', label: 'Masculino' },
   { value: 'F', label: 'Femenino' },
   { value: 'X', label: 'Otros' },
@@ -37,6 +38,9 @@ function Register() {
   const [paises, setPaises] = useState<ICountry[]>([]);
   const [provincias, setProvincias] = useState<IState[]>([]);
   const [localidades, setLocalidades] = useState<ICity[]>([]);
+  
+  const [paisCodigo, setPaisCodigo] = useState('');
+  const [provinciaCodigo, setProvinciaCodigo] = useState('');
 
 
   // 1. Cargar todos los países al montar el componente
@@ -46,24 +50,25 @@ function Register() {
 
   // 2. Escuchar cuando cambie el país para cargar sus provincias/estados
   useEffect(() => {
-    if (pais) {
-      setProvincias(State.getStatesOfCountry(pais));
+    if (paisCodigo) {
+      setProvincias(State.getStatesOfCountry(paisCodigo));
       setLocalidades([]); // Resetear localidades previas
+      setProvinciaCodigo('');
       setProvincia('');
     } else {
       setProvincias([]);
       setLocalidades([]);
     }
-  }, [pais]);
+  }, [paisCodigo]);
 
   // 3. Escuchar cuando cambie la provincia para cargar sus ciudades/localidades
   useEffect(() => {
-    if (pais && provincia) {
-      setLocalidades(City.getCitiesOfState(pais, provincia));
+    if (paisCodigo && provinciaCodigo) {
+      setLocalidades(City.getCitiesOfState(paisCodigo, provinciaCodigo));
     } else {
       setLocalidades([]);
     }
-  }, [pais, provincia]);
+  }, [paisCodigo, provinciaCodigo]);
 
 
   async function handleSubmit(e: React.FormEvent) {
@@ -71,23 +76,30 @@ function Register() {
     setError(null)
     setLoading(true)
 
+    // 1. Mostrar toast de carga
+    const idToast = toast.loading('Enviando código de verificación...');
+
+    // 2. Generar un código aleatorio de 6 dígitos
+    const codigoGenerado = Math.floor(100000 + Math.random() * 900000).toString();
+    
+
     try {
       await registerUser({
-        nombre,
-        apellido,
-        email,
-        password,
-        fechaNacimiento,
-        edad: Number(edad),
-        genero,
-        telefono,
-        direccion,
-        codigoPostal,
-        localidad,
-        provincia,
-        pais,
-        role: 'USER',
-      } as any)
+          nombre,
+          apellido,
+          email,
+          password,
+          fechaNacimiento,
+          edad: Number(edad),
+          genero,
+          telefono,
+          direccion,
+          codigoPostal,
+          localidad,
+          provincia,
+          pais, 
+          role: 'USER',
+      }) as any
 
       navigate({ to: '/login' })
     } catch (err: any) {
@@ -129,9 +141,11 @@ function Register() {
           <div className={`${styles.formRow} ${styles.inputBox}`}>
             <div>        
               <label className={styles.label} htmlFor="genero">Género</label>
-              <select className={styles.input} id="genero" value={genero} onChange={(e) => setGenero(e.target.value)} required>
+              <select className={styles.input} id="genero"  value={genero} onChange={(e) => setGenero(e.target.value)} required>
                 {GENEROS.map((item) => (
-                  <option key={item.value} value={item.value}>{item.label}</option>
+                  <option key={item.value} value={item.value}>
+                    {item.label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -173,12 +187,24 @@ function Register() {
               {/*<input className={styles.input} id="pais" type="text" placeholder="Argentina" value={pais} onChange={(e) => setPais(e.target.value)} required />*/}
               <select 
                 className={styles.input}
-                value={pais} 
-                onChange={(e) => setPais(e.target.value)}
+                /*value={pais} 
+                onChange={(e) => setPais(e.target.value)}*/
+                value={pais ? `${paisCodigo}_${pais}` : ""} 
+                onChange={(e) => {
+                  const valorCompleto = e.target.value;
+                  if (valorCompleto) {
+                    const [codigo, nombre] = valorCompleto.split('_');
+                    setPaisCodigo(codigo); // Guardamos el código para los useEffect
+                    setPais(nombre);       // Tu variable 'pais' ahora guarda el NOMBRE
+                  } else {
+                    setPaisCodigo('');
+                    setPais('');
+                  }
+                }} required
               >
                 <option value="">Selecciona un país</option>
                 {paises.map((p) => (
-                  <option key={p.isoCode} value={p.isoCode}>
+                  <option key={p.isoCode} value={`${p.isoCode}_${p.name}`}>
                     {p.name}
                     {/*{p.flag} {p.name}*/}
                   </option>
@@ -193,13 +219,25 @@ function Register() {
               {/*<input className={styles.input} id="provincia" type="text" placeholder="Buenos Aires" value={provincia} onChange={(e) => setProvincia(e.target.value)} required />*/}
               <select 
                 className={styles.input}
-                value={provincia} 
-                onChange={(e) => setProvincia(e.target.value)}
                 disabled={!pais}
+                /*value={provincia} 
+                onChange={(e) => setProvincia(e.target.value)}*/
+                value={provincia ? `${provinciaCodigo}_${provincia}` : ""} 
+                onChange={(e) => {
+                  const valorCompleto = e.target.value;
+                  if (valorCompleto) {
+                    const [codigo, nombre] = valorCompleto.split('_');
+                    setProvinciaCodigo(codigo); // Guardamos el código para los useEffect
+                    setProvincia(nombre);       // Tu variable 'provincia' ahora guarda el NOMBRE
+                  } else {
+                    setProvinciaCodigo('');
+                    setProvincia('');
+                  }
+                }} required
               >
                 <option value="">Selecciona una provincia</option>
                 {provincias.map((p) => (
-                  <option key={p.isoCode} value={p.isoCode}>
+                  <option key={p.isoCode} value={`${p.isoCode}_${p.name}`}>
                     {p.name}
                   </option>
                 ))}
@@ -213,6 +251,7 @@ function Register() {
                 value={localidad} 
                 disabled={!provincia}
                 onChange={(e) => setLocalidad(e.target.value)}
+                required
               >
                 <option value="">Selecciona una localidad</option>
                 {localidades.map((l) => (
