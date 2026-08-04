@@ -7,11 +7,13 @@ import styles from './Home.module.css'
 import { getUsers } from '@/api/getUsers'
 import { updateUser } from '@/api/updateUser'
 import { createUser } from '@/api/createUser'
+import { deleteUser } from '@/api/deleteUser'
 import type { User } from '@/api/types'
 import { APIProvider, Map, Marker} from '@vis.gl/react-google-maps'
 import {KEY_MAPS} from '@/config/globals.ts'
 import Buscador from '@/components/blocks/Search/Search'; // Importa el buscador
 import Paginacion from '@/components/blocks/Pagination/Pagination'; // Importa la paginación
+import PasswordInput from '@/components/ui/Input/PasswordInput'
 
 const ROLES = [
   {value:'ROOT', label: 'Root'},
@@ -35,7 +37,7 @@ function Home() {
 
   // Usuario seleccionado para ver o editar en el modal
   const [modalUser, setModalUser] = useState<User | null>(null)
-  const [modalMode, setModalMode] = useState<'view' | 'edit' | 'map' | 'create' | null>(null)
+  const [modalMode, setModalMode] = useState<'view' | 'edit' | 'map' | 'create' | 'confirm' | null>(null)
 
   //Localidad seleccionada para ver en Google Maps
   //const [modalLocalidad, setModalLocalidad] = useState<User | null>(null)
@@ -78,6 +80,11 @@ function Home() {
     setModalUser(user)
     setModalMode(user ? 'edit' : 'create')
   }
+  
+  function openConfirm(user: User) {
+    setModalUser(user)
+    setModalMode('confirm')
+  }
 
   function openMap(user: User) {
     setModalUser(user)
@@ -94,16 +101,11 @@ function Home() {
     closeModal()
   }
   // 4. Función para eliminar el usuario por su ID
-  const handleDelete = (id: string, name: string) => {
-    // Confirmación de seguridad
-    const confirmDelete = window.confirm(`¿Estás seguro de que deseas eliminar a ${name}?`);
-    
-    if (confirmDelete) {
-      // Filtramos la lista para excluir al usuario eliminado
-      const updatedUsers = users.filter(user => user._id !== id);
-      setUsers(updatedUsers);
-    }
+  const handleUserDeleted = (deleted: User) => {
+    setUsers((prev) => prev.filter((u) => (u._id !== deleted._id)))
+    closeModal()
   }
+  
 
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -220,7 +222,7 @@ function Home() {
                       >
                         Editar
                       </button>
-                      <DeleteButton onClick={() => handleDelete(user._id, user.nombre)}>Borrar</DeleteButton>
+                      <DeleteButton onClick={() => openConfirm(user)}>Borrar</DeleteButton>
                     </div>
                   </td>
                 </tr>
@@ -240,7 +242,10 @@ function Home() {
       <Modal
         isOpen={modalMode !== null }
         onClose={closeModal}
-        title={modalMode === 'view' ? 'Detalle de usuario' : modalMode === 'edit' ? 'Editar usuario' : modalMode === 'create' ? 'Crear usuario' :''}
+        title={modalMode === 'view' ? 'Detalle de usuario' : 
+          modalMode === 'edit' ? 'Editar usuario' : 
+          modalMode === 'create' ? 'Crear usuario' : 
+          modalMode === 'confirm' ? 'Borrar usuario'  :''}
         /*title={modalMode === 'view' ? 'Detalle de usuario' : 'Editar usuario'}*/
       >
         {modalMode === 'view' && modalUser && <UserDetails user={modalUser} />}
@@ -249,6 +254,9 @@ function Home() {
         )}
         {modalMode === 'create' && (
           <UserEditForm user={modalUser} onCancel={closeModal} onSaved={handleUserUpdated} />
+        )}
+        {modalMode === 'confirm' && (
+          <ConfirmDelete user={modalUser} onCancel={closeModal} onSaved={handleUserDeleted} />
         )}
         {modalMode === 'map' && modalUser && <Ubicacion user={modalUser} onCloseMap={closeModal}/>}
       </Modal>
@@ -306,6 +314,7 @@ function UserEditForm({
   const [nombre, setNombre] = useState(user?.nombre ?? '')
   const [apellido, setApellido] = useState(user?.apellido ?? '')
   const [email, setEmail] = useState(user?.email ?? '')
+  const [password, setPassword] = useState(user?.password ?? '')
   const [genero, setGenero] = useState(user?.genero ?? GENEROS[0].value) //Genero inicial por defecto
   const [edad, setEdad] = useState(String(user?.edad ?? ''))
   const [fechaNacimiento, setFechaNacimiento] = useState(user?.fechaNacimiento?.slice(0, 10) ?? '')
@@ -378,7 +387,7 @@ function UserEditForm({
         savedUser = await updateUser(user._id, userData)
       } else {
         // Modo Creación: Combinamos los datos base con el email usando el operador spread (...)
-        const newUserData = { ...userData, email }
+        const newUserData = { ...userData, email, password }
         savedUser = await createUser(newUserData)
       }
 
@@ -485,28 +494,22 @@ function UserEditForm({
             required
           />
         </div>
+        
         <div>
-          <label className={styles.label} htmlFor="edit-direccion">Dirección</label>
-          <input
-            className={styles.input}
-            id="edit-direccion"
-            type="text"
-            value={direccion}
-            onChange={(e) => setDireccion(e.target.value)}
-            required
-          />
+          <label className={styles.label} htmlFor="password">Contraseña</label>
+          <PasswordInput className={styles.input} id="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required />
         </div>
       </div>
 
       <div className={styles.formRow}>
         <div>
-          <label className={styles.label} htmlFor="edit-localidad">Localidad</label>
+          <label className={styles.label} htmlFor="edit-pais">País</label>
           <input
             className={styles.input}
-            id="edit-localidad"
+            id="edit-pais"
             type="text"
-            value={localidad}
-            onChange={(e) => setLocalidad(e.target.value)}
+            value={pais}
+            onChange={(e) => setPais(e.target.value)}
             required
           />
         </div>
@@ -525,40 +528,55 @@ function UserEditForm({
 
       <div className={styles.formRow}>
         <div>
-          <label className={styles.label} htmlFor="edit-pais">País</label>
+          <label className={styles.label} htmlFor="edit-localidad">Localidad</label>
           <input
             className={styles.input}
-            id="edit-pais"
+            id="edit-localidad"
             type="text"
-            value={pais}
-            onChange={(e) => setPais(e.target.value)}
+            value={localidad}
+            onChange={(e) => setLocalidad(e.target.value)}
             required
           />
         </div>
         <div>
-          <label className={styles.label} htmlFor="edit-codigoPostal">Código postal</label>
+          <label className={styles.label} htmlFor="edit-direccion">Dirección</label>
           <input
             className={styles.input}
-            id="edit-codigoPostal"
+            id="edit-direccion"
             type="text"
-            value={codigoPostal}
-            onChange={(e) => setCodigoPostal(e.target.value)}
+            value={direccion}
+            onChange={(e) => setDireccion(e.target.value)}
             required
           />
         </div>
-      </div>
-
-      <label className={styles.label} htmlFor="edit-role">Rol</label>
-      <select
-        className={styles.select}
-        id="edit-role"
-        value={role}
-        onChange={(e) => setRole(e.target.value)}
-      >
-        {ROLES.map((r) => (
-          <option key={r.value} value={r.value}>{r.label}</option>
-        ))}
-      </select>
+       
+      <div className={styles.formRow}>
+        </div>
+          <div>
+            <label className={styles.label} htmlFor="edit-codigoPostal">Código postal</label>
+            <input
+              className={styles.input}
+              id="edit-codigoPostal"
+              type="text"
+              value={codigoPostal}
+              onChange={(e) => setCodigoPostal(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <label className={styles.label} htmlFor="edit-role">Rol</label>
+            <select
+              className={styles.select}
+              id="edit-role"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+            >
+              {ROLES.map((r) => (
+                <option key={r.value} value={r.value}>{r.label}</option>
+              ))}
+            </select>
+          </div>
+        </div> 
 
       {error && <p className={styles.error}>{error}</p>}
 
@@ -573,6 +591,59 @@ function UserEditForm({
     </form>
   )
 }
+
+// ------------------------------------------------------------
+// Vista "Confirm": Confirmar antes de eliminar un usuario
+// ------------------------------------------------------------
+function ConfirmDelete({
+  user,
+  onCancel,
+  onSaved,
+}: {
+  user: User | null
+  onCancel: () => void
+  onSaved: (user: User) => void
+}) {
+    const [error, setError] = useState<string | null>(null)
+    const [loading, setLoading] = useState(false)
+
+    //async function handleDelete(e: React.FormEvent) {
+    async function handleDelete() {
+      //e.preventDefault()
+      setError(null)
+      setLoading(true)
+      console.log(user)
+      // 1. Agrupamos los datos base que comparten ambos modos
+      const userSelecter = user || null
+
+      try {
+        //let deletedUser: User
+        if (!userSelecter?._id) {
+          console.error("No se encontró el ID del usuario");
+          return; 
+        }
+        const deletedUser = await deleteUser(userSelecter._id)
+
+        onSaved(userSelecter)
+      } catch (error: any) {
+        setError(error.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    return(
+      <div>
+        <p>¿Estás seguro de que deseas eliminar este usuario? Esta acción no se puede deshacer.</p>
+        <div className={styles.modalActions}>
+          <Button variant="secondary" type="button" onClick={onCancel}>Cancelar</Button>
+          <Button variant="primary" type="button" onClick={handleDelete} disabled={loading}>
+            {loading ? 'Borrando...' : 'Borrar usuario'}
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
 
 // ------------------------------------------------------------

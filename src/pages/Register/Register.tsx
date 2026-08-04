@@ -272,9 +272,11 @@ function Register() {
               <label className={styles.label} htmlFor="pais">País</label>
               {/*<input className={styles.input} id="pais" type="text" placeholder="Argentina" value={pais} onChange={(e) => setPais(e.target.value)} required />*/}
               <select 
+                id = "pais"
                 className={styles.input}
                 /*value={pais} 
                 onChange={(e) => setPais(e.target.value)}*/
+                
                 value={pais ? `${paisCodigo}_${pais}` : ""} 
                 onChange={(e) => {
                   const valorCompleto = e.target.value;
@@ -304,6 +306,7 @@ function Register() {
               <label className={styles.label} htmlFor="provincia">Provincia</label>
               {/*<input className={styles.input} id="provincia" type="text" placeholder="Buenos Aires" value={provincia} onChange={(e) => setProvincia(e.target.value)} required />*/}
               <select 
+                id = "provincia"
                 className={styles.input}
                 disabled={!pais}
                 /*value={provincia} 
@@ -333,6 +336,7 @@ function Register() {
               <label className={styles.label} htmlFor="localidad">Localidad</label>
               {/*<input className={styles.input} id="localidad" type="text" placeholder="Ciudad de Buenos Aires" value={localidad} onChange={(e) => setLocalidad(e.target.value)} required />*/}
               <select 
+                id = "localidad"
                 className={styles.input}
                 value={localidad} 
                 disabled={!provincia}
@@ -356,7 +360,7 @@ function Register() {
             </div>
             <div>
               <label className={`${styles.label} ${styles.visuallyHidden}`} htmlFor="role">Role</label>
-              <input className={`${styles.input} ${styles.visuallyHidden}`} id="role" type="text" value= "USER" required />
+              <input className={`${styles.input} ${styles.visuallyHidden}`} id="role" type="text" defaultValue= "USER" required />
             </div>
           </div>
           {error && <p className={styles.error}>{error}</p>}

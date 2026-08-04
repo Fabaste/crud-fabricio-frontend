@@ -20,7 +20,7 @@ type ApiResponse<T> = {
 //export async function createUser(nombre: string, apellido: string, email: string, password: string) {
 export async function registerUser(data: CreateUserData): Promise<ApiResponse<User>> {
   /*const token = localStorage.getItem('token')*/
-  
+  console.log(data)
   const response = await fetch(`${API_URL}/registro/iniciar`, {
     method: 'POST',
     headers: {
