@@ -100,7 +100,7 @@ function Home() {
     
     if (confirmDelete) {
       // Filtramos la lista para excluir al usuario eliminado
-      const updatedUsers = users.filter(user => user.id !== id);
+      const updatedUsers = users.filter(user => user._id !== id);
       setUsers(updatedUsers);
     }
   }
@@ -220,7 +220,7 @@ function Home() {
                       >
                         Editar
                       </button>
-                      {/*<DeleteButton onClick={handleDelete(user._id,user.nombre)}>Borrar</DeleteButton>*/}
+                      <DeleteButton onClick={() => handleDelete(user._id, user.nombre)}>Borrar</DeleteButton>
                     </div>
                   </td>
                 </tr>

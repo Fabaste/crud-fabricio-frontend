@@ -1,10 +1,10 @@
 //import { Link } from '@tanstack/react-router'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type FormEvent} from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import styles from './Register.module.css'
 import Button from '@/components/ui/Button/Button'
 import PasswordInput from '@/components/ui/Input/PasswordInput'
-import { registerUser } from '@/api/register'
+import { registerUser, verificarCodigo } from '@/api/register'
 
 import toast, { Toaster } from 'react-hot-toast';
 import logo from '../Login/assets/logoFRS.png'
@@ -15,7 +15,7 @@ const GENEROS = [
   { value: 'M', label: 'Masculino' },
   { value: 'F', label: 'Femenino' },
   { value: 'X', label: 'Otros' },
-]
+] 
 
 function Register() {
   const [nombre, setNombre] = useState('')
@@ -42,6 +42,11 @@ function Register() {
   const [paisCodigo, setPaisCodigo] = useState('');
   const [provinciaCodigo, setProvinciaCodigo] = useState('');
 
+  
+  // ESTADOS DEL FLUJO DEL MODAL Y VERIFICACIÓN
+  const [mostrarModal, setMostrarModal] = useState(false);
+  const [tokenTemporal, setTokenTemporal] = useState('');
+  const [codigoIngresado, setCodigoIngresado] = useState('');
 
   // 1. Cargar todos los países al montar el componente
   useEffect(() => {
@@ -70,8 +75,89 @@ function Register() {
     }
   }, [paisCodigo, provinciaCodigo]);
 
+  // --- SUBMIT 1: ENVIAR DATOS FORMULARIO AL BACKEND ---
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null)
+    setLoading(true)
+    const idToast = toast.loading('Procesando datos y enviando correo...');
 
-  async function handleSubmit(e: React.FormEvent) {
+    try {
+      const data = (await registerUser({
+        nombre,
+        apellido,
+        email,
+        password,
+        fechaNacimiento,
+        edad: Number(edad),
+        genero,
+        telefono,
+        direccion,
+        codigoPostal,
+        localidad,
+        provincia,
+        pais, 
+        role: 'USER',
+      })) as Record<string, any>;
+     
+      const token = data.tokenTemporal || data.token || ''
+
+      if (!token) {
+        throw new Error(data.message || 'No se pudo iniciar la verificación')
+      }
+      // Guardamos el token identificador que nos dió el backend
+      setTokenTemporal(token);
+      
+      toast.success('¡Código enviado! Revisa tu bandeja.', { id: idToast });
+      
+      // Abrimos el modal para ingresar el código con un pequeño delay
+      setTimeout(() => setMostrarModal(true), 1500);
+
+    } catch (error: any) {
+      setError(error.message)
+      toast.error(error.message, { id: idToast });
+    }finally {
+      setLoading(false)
+    }
+  };
+
+  // --- SUBMIT 2: ENVIAR CÓDIGO AL BACKEND ---
+  const manejarVerificarCodigo = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null)
+    setLoading(true)
+    const idToast = toast.loading('Validando código de seguridad...');
+
+    try {
+
+      if (!tokenTemporal) {
+        throw new Error('No hay un token temporal válido')
+      }
+      const data = await verificarCodigo(tokenTemporal, codigoIngresado) as Record<string, any>
+      
+    if (data?.success === false || data?.ok === false) {
+      throw new Error(data?.message || 'Código inválido')
+    }
+
+    toast.success('¡Registro completado con éxito! Redirigiendo...', { id: idToast })
+    setMostrarModal(false)
+    setCodigoIngresado('')
+
+      // Redirección definitiva al Login de tu app
+    setTimeout(() => {
+      navigate({ to: '/login' })
+    }, 2500)
+
+    } catch (error: any) {
+      setError(error.message)
+      toast.error(error.message, { id: idToast });
+    } finally {
+      setLoading(false)
+    }
+  };
+
+
+  /*async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
     setLoading(true)
@@ -107,7 +193,7 @@ function Register() {
     } finally {
       setLoading(false)
     }
-  }
+  }*/
 
   return (
     <main className={styles.container}>
@@ -283,6 +369,37 @@ function Register() {
             ¿Ya tenés cuenta? <Link to="/login">Iniciá sesión</Link>
           </p>
         </form>
+
+        {/* MODAL DE CONFIRMACIÓN DE CÓDIGO */}
+        {mostrarModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContenido}>
+            <h5 style={{ fontSize: 'clamp(16px, 1.5vw + 10px, 22px)', margin: '0 0 15px 0' }}>
+              Confirmación por Correo
+            </h5>
+            <p>Ingresa el código de 6 dígitos enviado a tu email. Expira en 5 minutos.</p>
+            
+            <form onSubmit={manejarVerificarCodigo}>
+              <input 
+                className={styles.input}
+                type="text" 
+                maxLength={6} 
+                placeholder="000000"
+                value={codigoIngresado} 
+                onChange={(e) => setCodigoIngresado(e.target.value)}
+                required
+                style={{ textAlign: 'center', letterSpacing: '6px', fontSize: '20px' }}
+              />
+              <div className={styles.botonContenedor} style={{ marginTop: '20px' }}>
+                <button type="submit" className={styles.botonEnviar} disabled={loading}>
+                  {loading ? 'Verificando...' : 'Verificar Código'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       </section>
 
       <section className={styles.right}>

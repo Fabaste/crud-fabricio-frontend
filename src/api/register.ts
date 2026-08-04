@@ -3,47 +3,63 @@ import type { User } from '@/api/types'
 
 export type CreateUserData = Omit<User, '_id'>;
 
+
+type ApiResponse<T> = {
+  success?: boolean
+  ok?: boolean
+  message?: string
+  tokenTemporal?: string
+  token?: string
+  data?: T
+}
+
 // ------------------------------------------------------------
 // POST /users → crea un usuario nuevo
 // Es una ruta protegida: solo un admin ya logueado puede crear usuarios
 // ------------------------------------------------------------
 //export async function createUser(nombre: string, apellido: string, email: string, password: string) {
-export async function registerUser(data: CreateUserData): Promise<User> {
+export async function registerUser(data: CreateUserData): Promise<ApiResponse<User>> {
   /*const token = localStorage.getItem('token')*/
-    console.log('registerUser data:', data)
-  const response = await fetch(`${API_URL}/register`, {
+  
+  const response = await fetch(`${API_URL}/registro/iniciar`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      /*Authorization: `Bearer ${token}`,*/
     },
 
     body: JSON.stringify(data),
-    /*body: JSON.stringify({
-      userData.nombre,
-      apellido,
-      email,
-      password,
-      role: 'USER',
-      // El backend exige estos campos también.
-      // Para mantener el formulario simple, mandamos valores por defecto.
-      fechaNacimiento: '2000-01-01',
-      edad: 25,
-      genero: 'No especificado',
-      telefono: '000000',
-      direccion: 'Sin dirección',
-      localidad: 'Sin localidad',
-      provincia: 'Sin provincia',
-      pais: 'Argentina',
-      codigoPostal: '0000',
-    }),*/
   })
 
-  const body = await response.json()
-
-  if (!body.success) {
-    throw new Error(body.message) // ej: "El usuario ya existe", "Acceso denegado"
+  const body = await response.json().catch(() => ({} as ApiResponse<User>))
+  
+  if (!response.ok || body.success === false || body.ok === false) {
+    throw new Error(body.message || 'Error en el registro')
   }
 
-  return body.data
+  return body
+}
+
+export async function verificarCodigo(tokenTemporal: string, codigo: string): Promise<ApiResponse<User>> {
+  /*const token = localStorage.getItem('token')*/
+  try{
+    const response = await fetch(`${API_URL}/registro/verificar`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ tokenTemporal, codigo }),
+    })
+
+    const body = await response.json().catch(() => ({} as ApiResponse<User>))
+
+    if (!response.ok || body.success === false || body.ok === false) {
+      throw new Error(body.message || 'Error al verificar el código.')
+    }
+
+    return body
+
+  } catch (error: any) {
+    console.error('Error en verificarCodigo:', error.message);
+    throw error; // Lo relanzamos para que tu componente de la interfaz pueda atraparlo en un try/catch
+  }
 }
