@@ -51,7 +51,6 @@ export async function verificarCodigo(tokenTemporal: string, codigo: string): Pr
     })
     const body = await response.json().catch(() => ({} as ApiResponse<User>))
 
-console.log(body.data, 'token',body.token , 'token temporal', body.tokentemporal, body.ok)
     if (!response.ok || body.success === false || body.ok === false) {
       throw new Error(body.message || 'Error al verificar el código.')
     }

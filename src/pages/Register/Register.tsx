@@ -118,7 +118,7 @@ function Register() {
       // Abrimos el modal para ingresar el código con un pequeño delay
       setCodigoEnviado(codigo)
       setReenvioDisponible(false)
-      setTimeout(() => setReenvioDisponible(true), 30000)
+      setTimeout(() => setReenvioDisponible(true), 120000)
       setTimeout(() => setMostrarModal(true), 1500);
 
     } catch (error: any) {
@@ -191,7 +191,7 @@ function Register() {
       if (!tokenTemporal) {
         throw new Error('No hay un token temporal válido')
       }
-      console.log(tokenTemporal, codigoIngresado)
+      //console.log(tokenTemporal, codigoIngresado)
       const data = await verificarCodigo(tokenTemporal, codigoIngresado) as Record<string, any>
       
     if (data?.success === false || data?.ok === false) {

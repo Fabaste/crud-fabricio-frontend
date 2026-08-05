@@ -119,11 +119,39 @@ function Home() {
     return searchString.includes(searchTerm.toLowerCase());
   }): [];
 
+  const sortedUsers = [...filteredUsers].sort((a, b) => {
+    // Comparamos por nombre (puedes cambiarlo a apellido si prefieres)
+    const nombreA = (a.nombre || "").toLowerCase();
+    const nombreB = (b.nombre || "").toLowerCase();
+    
+    // Si los nombres son iguales, desempata por apellido
+    if (nombreA === nombreB) {
+      const apellidoA = (a.apellido || "").toLowerCase();
+      const apellidoB = (b.apellido || "").toLowerCase();
+      return apellidoA.localeCompare(apellidoB);
+    }
+    
+    return nombreA.localeCompare(nombreB);
+  });
+
+
   // Lógica de paginación (Se queda aquí para calcular los cortes)
-  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+  /*const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
   const indexOfLastUser = currentPage * usersPerPage;
   const indexOfFirstUser = indexOfLastUser - usersPerPage;
-  const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
+  const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);*/
+
+  
+  // Lógica de paginación (Se queda aquí para calcular los cortes)
+  const totalPages = Math.ceil(sortedUsers.length / usersPerPage);
+  const indexOfLastUser = currentPage * usersPerPage;
+  const indexOfFirstUser = indexOfLastUser - usersPerPage;
+  const currentUsers = sortedUsers.slice(indexOfFirstUser, indexOfLastUser);
+
+
+
+
+
 
   // Tipos explícitos de Search y Pagination
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
