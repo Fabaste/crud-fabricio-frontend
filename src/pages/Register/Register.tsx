@@ -4,6 +4,7 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import styles from './Register.module.css'
 import Button from '@/components/ui/Button/Button'
 import PasswordInput from '@/components/ui/Input/PasswordInput'
+import Modal from '@/components/blocks/Modal/Modal'
 import { registerUser, verificarCodigo } from '@/api/register'
 
 import toast, { Toaster } from 'react-hot-toast';
@@ -47,6 +48,9 @@ function Register() {
   const [mostrarModal, setMostrarModal] = useState(false);
   const [tokenTemporal, setTokenTemporal] = useState('');
   const [codigoIngresado, setCodigoIngresado] = useState('');
+
+  const [codigoEnviado, setCodigoEnviado] = useState('');
+  const [reenvioDisponible, setReenvioDisponible] = useState(false);
 
   // 1. Cargar todos los países al montar el componente
   useEffect(() => {
@@ -101,6 +105,7 @@ function Register() {
       })) as Record<string, any>;
      
       const token = data.tokenTemporal || data.token || ''
+      const codigo = data.data ||  ''
 
       if (!token) {
         throw new Error(data.message || 'No se pudo iniciar la verificación')
@@ -111,15 +116,68 @@ function Register() {
       toast.success('¡Código enviado! Revisa tu bandeja.', { id: idToast });
       
       // Abrimos el modal para ingresar el código con un pequeño delay
+      setCodigoEnviado(codigo)
+      setReenvioDisponible(false)
+      setTimeout(() => setReenvioDisponible(true), 30000)
       setTimeout(() => setMostrarModal(true), 1500);
 
     } catch (error: any) {
       setError(error.message)
       toast.error(error.message, { id: idToast });
-    }finally {
+    } finally {
       setLoading(false)
     }
   };
+
+  const handleCloseModal = () => {
+    setMostrarModal(false)
+    setCodigoIngresado('')
+    setError(null)
+  }
+
+  const handleResendCode = async () => {
+    if (!tokenTemporal) {
+      setError('No existe una sesión de registro activa.')
+      return
+    }
+
+    setError(null)
+    setLoading(true)
+    const idToast = toast.loading('Reenviando código...')
+
+    try {
+      const data = (await registerUser({
+        nombre,
+        apellido,
+        email,
+        password,
+        fechaNacimiento,
+        edad: Number(edad),
+        genero,
+        telefono,
+        direccion,
+        codigoPostal,
+        localidad,
+        provincia,
+        pais,
+        role: 'USER',
+      })) as Record<string, any>
+
+      const token = data.tokenTemporal || data.token || ''
+      if (!token) throw new Error(data.message || 'No se pudo enviar otro código')
+
+      setTokenTemporal(token)
+      setCodigoEnviado('')
+      setReenvioDisponible(false)
+      setTimeout(() => setReenvioDisponible(true), 30000)
+      toast.success('Se envió un nuevo código al correo.', { id: idToast })
+    } catch (error: any) {
+      setError(error.message)
+      toast.error(error.message, { id: idToast })
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // --- SUBMIT 2: ENVIAR CÓDIGO AL BACKEND ---
   const manejarVerificarCodigo = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -133,6 +191,7 @@ function Register() {
       if (!tokenTemporal) {
         throw new Error('No hay un token temporal válido')
       }
+      console.log(tokenTemporal, codigoIngresado)
       const data = await verificarCodigo(tokenTemporal, codigoIngresado) as Record<string, any>
       
     if (data?.success === false || data?.ok === false) {
@@ -255,7 +314,7 @@ function Register() {
           <div className={styles.formRow}>
             <div>  
               <label className={styles.label} htmlFor="edad">Edad</label>
-              <input className={styles.input} id="edad" type="number" min={1} max={120} value={edad} readOnly required />
+              <input className={styles.input} id="edad" type="number" min={1} max={120} value={edad} readOnly tabIndex= {-1} required />
             </div>
             <div>
               <label className={styles.label} htmlFor="telefono">Teléfono</label>
@@ -363,7 +422,7 @@ function Register() {
               <input className={`${styles.input} ${styles.visuallyHidden}`} id="role" type="text" defaultValue= "USER" required />
             </div>
           </div>
-          {error && <p className={styles.error}>{error}</p>}
+          {/*{error && <p className={styles.error}>{error}</p>}*/}
 
           <Button variant="primary" type="submit" disabled={loading}>
             {loading ? 'Registrando...' : 'Registrarse'}
@@ -375,34 +434,42 @@ function Register() {
         </form>
 
         {/* MODAL DE CONFIRMACIÓN DE CÓDIGO */}
-        {mostrarModal && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modalContenido}>
-            <h5 style={{ fontSize: 'clamp(16px, 1.5vw + 10px, 22px)', margin: '0 0 15px 0' }}>
-              Confirmación por Correo
-            </h5>
-            <p>Ingresa el código de 6 dígitos enviado a tu email. Expira en 5 minutos.</p>
-            
-            <form onSubmit={manejarVerificarCodigo}>
-              <input 
-                className={styles.input}
-                type="text" 
-                maxLength={6} 
-                placeholder="000000"
-                value={codigoIngresado} 
-                onChange={(e) => setCodigoIngresado(e.target.value)}
-                required
-                style={{ textAlign: 'center', letterSpacing: '6px', fontSize: '20px' }}
-              />
-              <div className={styles.botonContenedor} style={{ marginTop: '20px' }}>
-                <button type="submit" className={styles.botonEnviar} disabled={loading}>
-                  {loading ? 'Verificando...' : 'Verificar Código'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+        <Modal
+          isOpen={mostrarModal}
+          onClose={handleCloseModal}
+          title="Confirmación por correo"
+        >
+          <p>Ingresa el código de 6 dígitos enviado a tu email. Expira en 2 minutos.</p>
+
+          <form onSubmit={manejarVerificarCodigo}>
+            <input
+              className={styles.input}
+              type="text"
+              maxLength={6}
+              placeholder="000000"
+              value={codigoIngresado}
+              onChange={(e) => setCodigoIngresado(e.target.value)}
+              required
+              style={{ textAlign: 'center', letterSpacing: '6px', fontSize: '20px' }}
+            />
+
+            <div className={styles.botonContenedor} style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <Button variant="primary" type="submit" disabled={loading}>
+                {loading ? 'Verificando...' : 'Verificar Código'}
+              </Button>
+
+              <Button variant="secondary" type="button" onClick={handleResendCode} disabled={loading || !reenvioDisponible}>
+                {reenvioDisponible ? 'Reenviar código' : 'Reenviar en 2m'}
+              </Button>
+
+              <Button variant="secondary" type="button" onClick={handleCloseModal} disabled={loading}>
+                Cancelar
+              </Button>
+            </div>
+          </form>
+
+          {/*{error && <p className={styles.error} style={{ marginTop: '16px' }}>{error}</p>}*/}
+        </Modal>
 
       </section>
 
@@ -425,7 +492,7 @@ function Register() {
           <img className={`${styles.stackIcon} ${styles.javascript}`} src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/javascript/default.svg" title="JavaScript" alt="JavaScript" />
         </div>
       </section>
-
+      <Toaster position="top-center" />
     </main>
   )
 }

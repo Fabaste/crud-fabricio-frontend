@@ -27,7 +27,7 @@ function PasswordInput({ className = '', ...props }: PasswordInputProps) {
       <button
         type="button"
         className={styles.toggle}
-
+        tabIndex= {-1}
         onClick={togglePasswordVisibility}
       >
         {/*onClick={() => setShowPassword((prev) => !prev)}*/}
