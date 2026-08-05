@@ -4,9 +4,28 @@ import Home from '@/pages/Home/Home'
 import Login from '@/pages/Login/Login'
 import Register from '@/pages/Register/Register'
 import CreateUser from '@/pages/CreateUser/CreateUser'
+import { Toaster } from 'react-hot-toast'
 
 const rootRoute = createRootRoute({
-  component: Outlet,
+  //component: Outlet,
+
+  component: () => (
+    <>
+      <Outlet />
+      {/* Contenedor global de notificaciones */}
+      <Toaster 
+        position="top-center" 
+        reverseOrder={false}
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#f5e2ba',
+            color: '#000000',
+          },
+        }}
+      />
+    </>
+  ),
 })
 
 const homeRoute = createRoute({

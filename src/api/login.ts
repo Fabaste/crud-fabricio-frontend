@@ -58,18 +58,9 @@ export async function verificar2FA(tokenTemporal: string, codigo: string): Promi
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
+//##############################################
+//CODIGO ANTES DE VERIFICACION DE DOBLE FACTOR
+//##############################################
 
 
 /*import {API_URL} from '@/config/globals.ts'|

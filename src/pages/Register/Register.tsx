@@ -7,7 +7,7 @@ import PasswordInput from '@/components/ui/Input/PasswordInput'
 import Modal from '@/components/blocks/Modal/Modal'
 import { registerUser, verificarCodigo } from '@/api/register'
 
-import toast, { Toaster } from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 import logo from '../Login/assets/logoFRS.png'
 import { Country, State, City, ICountry, IState, ICity  } from 'country-state-city';
 
@@ -84,6 +84,7 @@ function Register() {
     e.preventDefault();
     setError(null)
     setLoading(true)
+
     const idToast = toast.loading('Procesando datos y enviando correo...');
 
     try {
@@ -136,6 +137,9 @@ function Register() {
   }
 
   const handleResendCode = async () => {
+    
+    const idToast = toast.loading('Reenviando código...')
+
     if (!tokenTemporal) {
       setError('No existe una sesión de registro activa.')
       return
@@ -143,7 +147,8 @@ function Register() {
 
     setError(null)
     setLoading(true)
-    const idToast = toast.loading('Reenviando código...')
+
+    //const idToast = toast.loading('Reenviando código...')
 
     try {
       const data = (await registerUser({
@@ -194,18 +199,18 @@ function Register() {
       //console.log(tokenTemporal, codigoIngresado)
       const data = await verificarCodigo(tokenTemporal, codigoIngresado) as Record<string, any>
       
-    if (data?.success === false || data?.ok === false) {
-      throw new Error(data?.message || 'Código inválido')
-    }
+      if (data?.success === false || data?.ok === false) {
+        throw new Error(data?.message || 'Código inválido')
+      }
 
-    toast.success('¡Registro completado con éxito! Redirigiendo...', { id: idToast })
-    setMostrarModal(false)
-    setCodigoIngresado('')
+      toast.success('¡Registro completado con éxito! Ya puedes iniciar sesion', { id: idToast })
+      setMostrarModal(false)
+      setCodigoIngresado('')
 
-      // Redirección definitiva al Login de tu app
-    setTimeout(() => {
-      navigate({ to: '/login' })
-    }, 2500)
+        // Redirección definitiva al Login de tu app
+      setTimeout(() => {
+        navigate({ to: '/login' })
+      }, 2500)
 
     } catch (error: any) {
       setError(error.message)
@@ -492,7 +497,7 @@ function Register() {
           <img className={`${styles.stackIcon} ${styles.javascript}`} src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/javascript/default.svg" title="JavaScript" alt="JavaScript" />
         </div>
       </section>
-      <Toaster position="top-center" />
+      {/*<Toaster position="top-center" />*/}
     </main>
   )
 }

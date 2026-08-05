@@ -4,6 +4,8 @@ import styles from './Login.module.css'
 import Button from '@/components/ui/Button/Button.tsx'
 import { login, verificar2FA } from '@/api/login.ts' // <-- Añadimos verificar2FA
 
+import { toast } from 'react-hot-toast';
+
 import logo from './assets/logoFRS.png'
 import 'devicon/devicon.min.css';
 import PasswordInput from '@/components/ui/Input/PasswordInput'
@@ -30,6 +32,10 @@ function Login() {
     e.preventDefault()
     setError(null)
     setLoading(true)
+
+    // 2. Iniciamos el toast de carga y guardamos su ID de referencia
+    const toastId = toast.loading('Procesando credenciales...')
+
     try {
       const data = await login(email, password) as any
       
@@ -40,15 +46,21 @@ function Login() {
         if (data.qrCode) {
           // Si es configuración inicial, el back nos mandará el string Base64 del QR
           setQrCodeUrl(data.qrCode)
+          toast.success('Contraseña correcta. Escaneá el código QR.', { id: toastId })
+        } else {
+          toast.success('Contraseña correcta. Ingresá tu código de 6 digitos.', { id: toastId })
         }
       } else {
         // Flujo tradicional si no tuviese el 2FA forzado (o directo)
         localStorage.setItem('token', data.token)
         localStorage.setItem('role', data.role)
+        toast.success('¡Inicio de sesión exitoso!', { id: toastId })
         navigate({ to: '/' })
       }
     } catch (error: any) {
       setError(error.message)
+      // 3. Reutilizamos el ID para transformar la carga en un aviso de error explícito
+      toast.error(error.message || 'Error al iniciar sesión', { id: toastId })
     } finally {
       setLoading(false)
     }
@@ -59,15 +71,21 @@ function Login() {
     e.preventDefault()
     setError(null)
     setLoading(true)
+
+    const toastId = toast.loading('Verificando código de seguridad...')
+
     try {
       const data = await verificar2FA(tokenTemporal, codigo2FA)
       
       // Guardamos el token definitivo de sesión
       localStorage.setItem('token', data.token)
-      localStorage.setItem('role', data.role)
+      localStorage.setItem('role', data.role) 
+      toast.success('¡Doble factor verificado! Bienvenido.', { id: toastId })
+      
       navigate({ to: '/' })
     } catch (error: any) {
       setError(error.message)
+      toast.error(error.message || 'Código incorrecto o expirado', { id: toastId })
     } finally {
       setLoading(false)
     }
@@ -104,7 +122,7 @@ function Login() {
               required 
             />
 
-            {error && <p className={styles.error}>{error}</p>}
+            {/*{error && <p className={styles.error}>{error}</p>}*/}
 
             <Button variant="primary" type="submit" disabled={loading}>
               {loading ? 'Ingresando...' : 'Iniciar Sesión'}
@@ -146,7 +164,7 @@ function Login() {
               autoFocus
             />
 
-            {error && <p className={styles.error}>{error}</p>}
+            {/*{error && <p className={styles.error}>{error}</p>}*/}
 
             <Button variant="primary" type="submit" disabled={loading}>
               {loading ? 'Verificando...' : 'Verificar Código'}
