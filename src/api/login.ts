@@ -13,6 +13,7 @@ interface LoginResponse {
 interface AuthResponse {
   token: string;
   role: string;
+  userId: string;
 }
 
 // -------------------------------------------

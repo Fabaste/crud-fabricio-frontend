@@ -54,6 +54,8 @@ function Login() {
         // Flujo tradicional si no tuviese el 2FA forzado (o directo)
         localStorage.setItem('token', data.token)
         localStorage.setItem('role', data.role)
+        localStorage.setItem('userId', data.userId)
+
         toast.success('¡Inicio de sesión exitoso!', { id: toastId })
         navigate({ to: '/' })
       }
@@ -80,6 +82,7 @@ function Login() {
       // Guardamos el token definitivo de sesión
       localStorage.setItem('token', data.token)
       localStorage.setItem('role', data.role) 
+      localStorage.setItem('userId', data.userId)
       toast.success('¡Doble factor verificado! Bienvenido.', { id: toastId })
       
       navigate({ to: '/' })

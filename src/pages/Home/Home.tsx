@@ -41,6 +41,8 @@ function Home() {
 
   //Localidad seleccionada para ver en Google Maps
   //const [modalLocalidad, setModalLocalidad] = useState<User | null>(null)
+  const roleUserLog = localStorage.getItem('role');
+  const idUserLog = localStorage.getItem('userId')
 
   useEffect(() => {
     // Protección mínima de ruta: sin token no tiene sentido estar acá
@@ -68,6 +70,7 @@ function Home() {
     // Cerrar sesión = borrar el token y volver al login
     localStorage.removeItem('token')
     localStorage.removeItem('role')
+    localStorage.removeItem('userId')
     navigate({ to: '/login' })
   }
 
@@ -196,7 +199,9 @@ function Home() {
                 <th className={styles.th}>Género</th>
                 <th className={styles.th}>Localidad</th>
                 <th className={styles.th}>Rol</th>
+                {roleUserLog !== "USER" && (
                 <th className={styles.th}>Acciones</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -241,6 +246,7 @@ function Home() {
                       {user.role}
                     </span>
                   </td>
+                  {roleUserLog !== "USER" && (
                   <td className={styles.td}>
                     <div className={styles.actions}>
                       <button className={styles.actionBtn} onClick={() => openView(user)}>Ver</button>
@@ -250,9 +256,20 @@ function Home() {
                       >
                         Editar
                       </button>
+
+                      {/* El 'null, 2' formatea el objeto con sangrías y saltos de línea perfectos 
+                      <pre style={{ background: '#222', color: '#fff', padding: '10px' }}>
+                        {JSON.stringify(idUserLog, null, 2)}
+                        {JSON.stringify(user._id, null, 2)}
+                      </pre>
+                      */}
+
+                      {idUserLog !== user._id && (user.role !== "ADMIN" || roleUserLog === "ROOT") && (
                       <DeleteButton onClick={() => openConfirm(user)}>Borrar</DeleteButton>
+                      )}
                     </div>
                   </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -453,62 +470,7 @@ function UserEditForm({
           />
         </div>
       </div>
-
-      <div className={styles.formRow}>
-        <div>
-          <label className={styles.label} htmlFor="edit-genero">Género</label>
-          <select
-            className={styles.select}
-            id="edit-genero"
-            value={genero}
-            onChange={(e) => setGenero(e.target.value)}
-            required
-          >
-            {GENEROS.map((r) => (
-              <option key={r.value} value={r.value}>{r.label}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className={styles.label} htmlFor="edit-edad">Edad</label>
-          <input
-            className={styles.input}
-            id="edit-edad"
-            type="number"
-            min={1}
-            max={120}
-            value={edad}
-            onChange={(e) => setEdad(e.target.value)}
-            required
-          />
-        </div>
-      </div>
-
-      <div className={styles.formRow}>
-        <div>
-          <label className={styles.label} htmlFor="edit-fechaNacimiento">Fecha de nacimiento</label>
-          <input
-            className={styles.input}
-            id="edit-fechaNacimiento"
-            type="date"
-            value={fechaNacimiento}
-            onChange={(e) => setFechaNacimiento(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label className={styles.label} htmlFor="edit-telefono">Teléfono</label>
-          <input
-            className={styles.input}
-            id="edit-telefono"
-            type="text"
-            value={telefono}
-            onChange={(e) => setTelefono(e.target.value)}
-            required
-          />
-        </div>
-      </div>
-
+      
       <div className={styles.formRow}>
         <div>
           <label className={styles.label} htmlFor="edit-email">Email</label>
@@ -531,24 +493,27 @@ function UserEditForm({
 
       <div className={styles.formRow}>
         <div>
-          <label className={styles.label} htmlFor="edit-pais">País</label>
-          <input
-            className={styles.input}
-            id="edit-pais"
-            type="text"
-            value={pais}
-            onChange={(e) => setPais(e.target.value)}
+          <label className={styles.label} htmlFor="edit-genero">Género</label>
+          <select
+            className={styles.select}
+            id="edit-genero"
+            value={genero}
+            onChange={(e) => setGenero(e.target.value)}
             required
-          />
+          >
+            {GENEROS.map((r) => (
+              <option key={r.value} value={r.value}>{r.label}</option>
+            ))}
+          </select>
         </div>
         <div>
-          <label className={styles.label} htmlFor="edit-provincia">Provincia</label>
+          <label className={styles.label} htmlFor="edit-fechaNacimiento">Fecha de nacimiento</label>
           <input
             className={styles.input}
-            id="edit-provincia"
-            type="text"
-            value={provincia}
-            onChange={(e) => setProvincia(e.target.value)}
+            id="edit-fechaNacimiento"
+            type="date"
+            value={fechaNacimiento}
+            onChange={(e) => setFechaNacimiento(e.target.value)}
             required
           />
         </div>
@@ -556,16 +521,32 @@ function UserEditForm({
 
       <div className={styles.formRow}>
         <div>
-          <label className={styles.label} htmlFor="edit-localidad">Localidad</label>
+          <label className={styles.label} htmlFor="edit-edad">Edad</label>
           <input
             className={styles.input}
-            id="edit-localidad"
-            type="text"
-            value={localidad}
-            onChange={(e) => setLocalidad(e.target.value)}
+            id="edit-edad"
+            type="number"
+            min={1}
+            max={120}
+            value={edad}
+            onChange={(e) => setEdad(e.target.value)}
             required
           />
         </div>
+        <div>
+          <label className={styles.label} htmlFor="edit-telefono">Teléfono</label>
+          <input
+            className={styles.input}
+            id="edit-telefono"
+            type="text"
+            value={telefono}
+            onChange={(e) => setTelefono(e.target.value)}
+            required
+          />
+        </div>
+      </div>
+
+      <div className={styles.formRow}>
         <div>
           <label className={styles.label} htmlFor="edit-direccion">Dirección</label>
           <input
@@ -577,34 +558,70 @@ function UserEditForm({
             required
           />
         </div>
+        <div>
+          <label className={styles.label} htmlFor="edit-pais">País</label>
+          <input
+            className={styles.input}
+            id="edit-pais"
+            type="text"
+            value={pais}
+            onChange={(e) => setPais(e.target.value)}
+            required
+          />
+        </div>
+      </div>
+
+      <div className={styles.formRow}>
+        <div>
+          <label className={styles.label} htmlFor="edit-provincia">Provincia</label>
+          <input
+            className={styles.input}
+            id="edit-provincia"
+            type="text"
+            value={provincia}
+            onChange={(e) => setProvincia(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label className={styles.label} htmlFor="edit-localidad">Localidad</label>
+          <input
+            className={styles.input}
+            id="edit-localidad"
+            type="text"
+            value={localidad}
+            onChange={(e) => setLocalidad(e.target.value)}
+            required
+          />
+        </div>
+      </div>
        
       <div className={styles.formRow}>
+        <div>
+          <label className={styles.label} htmlFor="edit-codigoPostal">Código postal</label>
+          <input
+            className={styles.input}
+            id="edit-codigoPostal"
+            type="text"
+            value={codigoPostal}
+            onChange={(e) => setCodigoPostal(e.target.value)}
+            required
+          />
         </div>
-          <div>
-            <label className={styles.label} htmlFor="edit-codigoPostal">Código postal</label>
-            <input
-              className={styles.input}
-              id="edit-codigoPostal"
-              type="text"
-              value={codigoPostal}
-              onChange={(e) => setCodigoPostal(e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <label className={styles.label} htmlFor="edit-role">Rol</label>
-            <select
-              className={styles.select}
-              id="edit-role"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-            >
-              {ROLES.map((r) => (
-                <option key={r.value} value={r.value}>{r.label}</option>
-              ))}
-            </select>
-          </div>
-        </div> 
+        <div>
+          <label className={styles.label} htmlFor="edit-role">Rol</label>
+          <select
+            className={styles.select}
+            id="edit-role"
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+          >
+            {ROLES.map((r) => (
+              <option key={r.value} value={r.value}>{r.label}</option>
+            ))}
+          </select>
+        </div>
+      </div> 
 
       {error && <p className={styles.error}>{error}</p>}
 
