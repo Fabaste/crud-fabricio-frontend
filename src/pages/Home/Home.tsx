@@ -231,8 +231,9 @@ function Home() {
             </div>
           </div>
         </div>
-        <div className={styles.topDate}>
-          <h2>Total de usuarios {totalUsuarios}</h2>
+        <div className={styles.topTotal}>
+          <h2>Total de usuarios</h2>
+          <h2 className={styles.numTotal}>{totalUsuarios}</h2>
         </div>
       </div>
 

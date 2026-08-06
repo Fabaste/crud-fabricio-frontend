@@ -445,7 +445,7 @@
   align-items: center;
   background-color: #111;
   border: 1px solid #222;
-  padding: 12px 24px;
+  padding: 0px 8px;
   border-radius: 12px;
   margin-bottom: 32px;
 }
@@ -475,10 +475,20 @@
   color: #fff;
 }
 
-.topDate {
-  font-size: 13px;
-  color: #888;
+.numTotal{
+  font-size: 20px;
+}
+
+h2 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff;
   text-transform: capitalize;
+}
+.topTotal {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
 }
 
 /* ============================================================
@@ -488,13 +498,22 @@
 
 @media (max-width: 768px) {
   .topBar {
-    flex-direction: column;
+    /*flex-direction: column;*/
     gap: 12px;
     align-items: flex-start;
     padding: 16px;
   }
-  
-  .topDate {
-    align-self: flex-end; /* Mueve la fecha a la derecha abajo en celulares */
+}
+
+@media (max-width: 500px) {
+  .numTotal{
+    font-size: 18px;
+  }
+
+  h2 {
+    font-size: 12px;
+    font-weight: 600;
+    color: #ffffff;
+    text-transform: capitalize;
   }
 }
