@@ -57,6 +57,7 @@
   
   .table {
     width: 100%;
+    table-layout: fixed;
     border-collapse: collapse;
     background-color: #111;
   }
@@ -121,6 +122,8 @@
     font-size: 12px;
     font-weight: 600;
     color:#ffffff;
+    justify-content: right;
+    align-items: center;
   }
   
   .badge__admin {
@@ -284,7 +287,7 @@
 
   
   /* ============================================================
-                                  MODAL — CONFIMDELETE (formulario)
+                                  MODAL — CONFIRMDELETE (formulario)
   ============================================================ */
 
   p {
@@ -302,4 +305,196 @@
     .formRow {
       grid-template-columns: 1fr;
     }
+}
+
+/* ============================================================
+                     MOBILE & RESPONSIVE COMPLETOS
+============================================================ */
+
+/* 1. Tablets y pantallas medianas (Hasta 900px) */
+@media (max-width: 900px) {
+  .header {
+    flex-direction: column;
+    /*align-items: stretch;*/
+    gap: 16px;
+  }
+  
+  .title {
+    text-align: center;
+  }
+
+  .headerActions {
+    justify-content: center;
+  }
+}
+
+/* 2. Tablets chicas y celulares (Hasta 768px) */
+@media (max-width: 768px) {
+  .container {
+    padding: 20px 16px;
+  }
+
+  /* Hace que el detalle de usuario y los formularios pasen a 1 sola columna */
+  .viewGrid,
+  .formRow {
+    grid-template-columns: 1fr;
+    gap: 12px; /* Espaciado uniforme al apilarse */
+  }
+
+  /* Ajusta las acciones de los formularios para que entren bien en pantallas chicas */
+  .modalActions {
+    flex-direction: column-reverse; /* El botón principal queda arriba en móviles */
+    gap: 8px;
+  }
+
+  .modalActions button {
+    width: 100%; /* Botones del modal ocupan todo el ancho */
+  }
+}
+
+/* 3. Transformación de la tabla a Tarjetas independientes (Hasta 650px) */
+@media (max-width: 650px) {
+  .headerActions {
+    flex-direction: column;
+  }
+
+  .headerActions button {
+    width: 100%;
+  }
+
+  /* Ocultamos el encabezado viejo de la tabla */
+  .table thead {
+    display: none;
+  }
+
+  /* Forzamos que la tabla actúe como un contenedor de bloques (tarjetas) */
+  .table, .table tbody, .table tr, .table td {
+    display: block;
+    width: 100%;
+  }
+
+  /* Cada fila se convierte en una tarjeta independiente */
+  .table tr {
+    margin-bottom: 20px;
+    border: 1px solid #222;
+    border-radius: 12px;
+    background-color: #111;
+    padding: 16px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  }
+
+  .tr:hover {
+    background-color: #141414; /* Un hover sutil para la tarjeta */
+  }
+
+  /* Cada celda se transforma en una fila interna de la tarjeta */
+  .td {
+    border: none;
+    padding: 10px 0;
+    text-align: right; /* Alinea los valores a la derecha */
+    display: flex;
+    justify-content: space-between; /* Distribuye etiqueta a la izquierda, valor a la derecha */
+    align-items: center;
+    border-bottom: 1px solid #1a1a1a;
+    
+    /* IMPORTANTE: Rompemos el nowrap original para que los mails no rompan la pantalla */
+    white-space: normal; 
+    word-break: break-word; 
+  }
+
+  /* La última celda no necesita la línea separadora inferior */
+  .td:last-child {
+    border-bottom: none;
+  }
+
+  /* Estructura para inyectar etiquetas móviles automáticamente (si usas data-label) */
+  .td::before {
+    content: attr(data-label);
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #666;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding-right: 12px;
+    text-align: left;
+  }
+
+  /* Contenedor de botones VER, EDITAR, BORRAR dentro de la tarjeta */
+  .actions {
+    width: 100%;
+    justify-content: flex-end; /* Alinea los botones a la derecha de la tarjeta */
+    gap: 8px;
+    flex-wrap: wrap; /* Si son botones grandes, bajan ordenadamente */
+    padding-top: 8px;
+  }
+
+  .actionBtn {
+    padding: 8px 16px; /* Botones ligeramente más grandes para tocarlos fácil con el dedo */
+    font-size: 14px;
+    flex-grow: 1; /* Hace que los botones se distribuyan de forma equitativa en el ancho móvil */
+    text-align: center;
+  }
+}
+
+/* ============================================================
+                             TOP BAR
+============================================================ */
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #111;
+  border: 1px solid #222;
+  padding: 12px 24px;
+  border-radius: 12px;
+  margin-bottom: 32px;
+}
+
+.userProfile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.topAvatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 1px solid #333;
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.userName {
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.topDate {
+  font-size: 13px;
+  color: #888;
+  text-transform: capitalize;
+}
+
+/* ============================================================
+                     RESPONSIVE PARA METRICAS
+============================================================ */
+
+
+@media (max-width: 768px) {
+  .topBar {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 16px;
+  }
+  
+  .topDate {
+    align-self: flex-end; /* Mueve la fecha a la derecha abajo en celulares */
+  }
 }

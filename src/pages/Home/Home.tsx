@@ -14,6 +14,8 @@ import {KEY_MAPS} from '@/config/globals.ts'
 import Buscador from '@/components/blocks/Search/Search'; // Importa el buscador
 import Paginacion from '@/components/blocks/Pagination/Pagination'; // Importa la paginación
 import PasswordInput from '@/components/ui/Input/PasswordInput'
+import { Country, State, City, ICountry, IState, ICity  } from 'country-state-city';
+import { toast } from 'react-hot-toast';
 
 const ROLES = [
   {value:'ROOT', label: 'Root'},
@@ -151,19 +153,46 @@ function Home() {
   const indexOfFirstUser = indexOfLastUser - usersPerPage;
   const currentUsers = sortedUsers.slice(indexOfFirstUser, indexOfLastUser);
 
-
-
-
-
-
   // Tipos explícitos de Search y Pagination
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1); 
   };
 
+
+  const totalUsuarios = users.length;
+  const loggedUser = users.find((user) => user._id === idUserLog)
+  const loggedUserName = loggedUser
+    ? `${loggedUser.nombre || ''} ${loggedUser.apellido || ''}`.trim()
+    : 'Usuario'
+
   return (
     <main className={styles.container}>
+
+      {/* ─── NUEVO COMPONENTE: TOP BAR DE USUARIO LOGUEADO ─── */}
+      <div className={styles.topBar}>
+        <div className={styles.userProfile}>
+          <img
+            className={styles.topAvatar}
+            src={`./src/assets/ui-avatars/${idUserLog}.jpeg`}
+            onError={(e) => {
+              e.currentTarget.onerror = null; // Evita bucles infinitos si la API también falla
+              e.currentTarget.src = `https://ui-avatars.com/api/?name=${loggedUser?.nombre}+${loggedUser?.apellido}&background=random`;
+            }}
+            alt="Avatar usuario logueado"
+          />
+            {/*src={`https://ui-avatars.com{nombreUserLog || 'U'}+${apellidoUserLog || ''}&background=random`}*/}
+          <div className={styles.userInfo}>
+            <span className={styles.userName}>{loggedUserName}</span>
+            <span className={`${styles.badge} ${styles[`badge__${roleUserLog?.toLowerCase()}`] ?? ''}`}>
+              {roleUserLog}
+            </span>
+          </div>
+        </div>
+        <div className={styles.topDate}>
+          <h2>Total de usuarios {totalUsuarios}</h2>
+        </div>
+      </div>
 
       <div className={styles.header}>
         <h1 className={styles.title}>Usuarios</h1>
@@ -174,7 +203,11 @@ function Home() {
         />
         <div className={styles.headerActions}>
           {/*<Button variant="primary" onClick={() => navigate({ to: '/createUser' })}>+ Agregar</Button>*/}
+          {roleUserLog !== "USER" && roleUserLog !== "GUEST" ? (
           <Button variant="primary" onClick={() => openEdit(null)}>+ Agregar</Button>
+          ):(
+            <Button variant="primary" onClick={() => openEdit(null)} disabled= {true}>+ Agregar</Button>
+          )}
           <Button variant="secondary" onClick={handleLogout}>Cerrar sesión</Button>
         </div>
       </div>
@@ -295,10 +328,10 @@ function Home() {
       >
         {modalMode === 'view' && modalUser && <UserDetails user={modalUser} />}
         {modalMode === 'edit' && modalUser && (
-          <UserEditForm user={modalUser} onCancel={closeModal} onSaved={handleUserUpdated} />
+          <UserEditForm roleUsLog = {roleUserLog ?? ''} user={modalUser} onCancel={closeModal} onSaved={handleUserUpdated} />
         )}
         {modalMode === 'create' && (
-          <UserEditForm user={modalUser} onCancel={closeModal} onSaved={handleUserUpdated} />
+          <UserEditForm roleUsLog = {roleUserLog ?? ''} user={modalUser} onCancel={closeModal} onSaved={handleUserUpdated} />
         )}
         {modalMode === 'confirm' && (
           <ConfirmDelete user={modalUser} onCancel={closeModal} onSaved={handleUserDeleted} />
@@ -347,10 +380,12 @@ function UserDetails({ user }: { user: User }) {
 // ------------------------------------------------------------
 // 1. Cambiamos el tipado para aceptar User | null
 function UserEditForm({
+  roleUsLog,
   user,
   onCancel,
   onSaved,
 }: {
+  roleUsLog: string
   user: User | null
   onCancel: () => void
   onSaved: (user: User) => void
@@ -364,49 +399,87 @@ function UserEditForm({
   const [edad, setEdad] = useState(String(user?.edad ?? ''))
   const [fechaNacimiento, setFechaNacimiento] = useState(user?.fechaNacimiento?.slice(0, 10) ?? '')
   const [telefono, setTelefono] = useState(user?.telefono ?? '')
-  const [direccion, setDireccion] = useState(user?.direccion ?? '')
-  const [localidad, setLocalidad] = useState(user?.localidad ?? '')
-  const [provincia, setProvincia] = useState(user?.provincia ?? '')
+  const [direccion, setDireccion] = useState<string>(user?.direccion ?? '')
+  const [localidad, setLocalidad] = useState<string>(user?.localidad ?? '')
+  const [provincia, setProvincia] = useState<string>(user?.provincia ?? '')
   const [pais, setPais] = useState(user?.pais ?? '')
   const [codigoPostal, setCodigoPostal] = useState(user?.codigoPostal ?? '')
   const [role, setRole] = useState(user?.role ?? ROLES[2].value) // Rol inicial por defecto
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
+  const [paises, setPaises] = useState<ICountry[]>([]);
+  const [provincias, setProvincias] = useState<IState[]>([]);
+  const [localidades, setLocalidades] = useState<ICity[]>([]);
+  
+  const [paisCodigo, setPaisCodigo] = useState('');
+  const [provinciaCodigo, setProvinciaCodigo] = useState('');
+
+  // 1. Cargar todos los países al montar el componente
+  useEffect(() => {
+    setPaises(Country.getAllCountries());
+  }, []);
+
+  // 1.5 NUEVO EFECTO: Buscar códigos ISO cuando "user" existe (Modo Edición)
+  useEffect(() => {
+    if (user?.pais) {
+      // Buscamos el país por su nombre para extraer el isoCode
+      const todosLosPaises = Country.getAllCountries();
+      const paisEncontrado = todosLosPaises.find(p => p.name.toLowerCase() === user.pais.toLowerCase());
+      
+      if (paisEncontrado) {
+        setPaisCodigo(paisEncontrado.isoCode);
+        
+        // Si también tiene provincia, buscamos su código ISO dentro de ese país
+        if (user.provincia) {
+          const provinciasDelPais = State.getStatesOfCountry(paisEncontrado.isoCode);
+          const provEncontrada = provinciasDelPais.find(s => s.name.toLowerCase() === user.provincia.toLowerCase());
+          
+          if (provEncontrada) {
+            setProvinciaCodigo(provEncontrada.isoCode);
+          }
+        }
+      }
+    }
+  }, [user]); // Se ejecuta cuando el objeto usuario está disponible
+
+  // 2. Escuchar cuando cambie el país para cargar sus provincias/estados
+  useEffect(() => {
+    if (paisCodigo) {
+      const listaProvincias = State.getStatesOfCountry(paisCodigo);
+      setProvincias(listaProvincias);
+      
+      // SOLO reseteamos si el usuario cambió manualmente el país en el select
+      // Si el nombre actual coincide con el del usuario editado, mantenemos el flujo
+      if (pais !== user?.pais) {
+        setLocalidades([]); 
+        setProvinciaCodigo('');
+        setProvincia('');
+      }
+    } else {
+      setProvincias([]);
+      setLocalidades([]);
+    }
+  }, [paisCodigo]);
+
+  // 3. Escuchar cuando cambie la provincia para cargar sus ciudades/localidades
+  useEffect(() => {
+    if (paisCodigo && provinciaCodigo) {
+      setLocalidades(City.getCitiesOfState(paisCodigo, provinciaCodigo));
+    } else {
+      setLocalidades([]);
+    }
+  }, [paisCodigo, provinciaCodigo]);
+
   // 3. Identificamos si estamos editando o creando
   const isEditing = Boolean(user && user._id)
-
-  /*async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setError(null)
-    setLoading(true)
-    try {
-      const updated = await updateUser(user._id, {
-        nombre,
-        apellido,
-        genero,
-        edad: Number(edad),
-        fechaNacimiento,
-        telefono,
-        direccion,
-        localidad,
-        provincia,
-        pais,
-        codigoPostal,
-        role,
-      })
-      onSaved(updated)
-    } catch (error: any) {
-      setError(error.message)
-    } finally {
-      setLoading(false)
-    }
-  }*/
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
     setLoading(true)
+
+    const idToast = toast.loading('Procesando datos y enviando correo...');
 
     // 1. Agrupamos los datos base que comparten ambos modos
     const userData = {
@@ -430,13 +503,16 @@ function UserEditForm({
       if (isEditing && user) {
         // Modo Edición: Se envían solo los datos base (sin email)
         savedUser = await updateUser(user._id, userData)
+        toast.success('El usuario se modificó con exito', { id: idToast });
       } else {
         // Modo Creación: Combinamos los datos base con el email usando el operador spread (...)
         const newUserData = { ...userData, email, password }
-        savedUser = await createUser(newUserData)
+        savedUser = await createUser(newUserData) 
+        toast.success('El usuario se creó con éxito', { id: idToast });
       }
 
       onSaved(savedUser)
+      
     } catch (error: any) {
       setError(error.message)
     } finally {
@@ -470,7 +546,8 @@ function UserEditForm({
           />
         </div>
       </div>
-      
+
+      {!isEditing && (
       <div className={styles.formRow}>
         <div>
           <label className={styles.label} htmlFor="edit-email">Email</label>
@@ -490,6 +567,7 @@ function UserEditForm({
           <PasswordInput className={styles.input} id="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required />
         </div>
       </div>
+      )}
 
       <div className={styles.formRow}>
         <div>
@@ -513,7 +591,18 @@ function UserEditForm({
             id="edit-fechaNacimiento"
             type="date"
             value={fechaNacimiento}
-            onChange={(e) => setFechaNacimiento(e.target.value)}
+            onChange={(e) => {
+              const nextValue = e.target.value
+              setFechaNacimiento(nextValue)
+              const today = new Date()
+              const birthDate = new Date(nextValue)
+              let calculatedAge = today.getFullYear() - birthDate.getFullYear()
+              const monthDiff = today.getMonth() - birthDate.getMonth()
+              if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                calculatedAge -= 1
+              }
+              setEdad(String(Number.isNaN(calculatedAge) ? '' : calculatedAge))
+            }}
             required
           />
         </div>
@@ -529,6 +618,8 @@ function UserEditForm({
             min={1}
             max={120}
             value={edad}
+            readOnly
+            tabIndex= {-1}
             onChange={(e) => setEdad(e.target.value)}
             required
           />
@@ -560,39 +651,107 @@ function UserEditForm({
         </div>
         <div>
           <label className={styles.label} htmlFor="edit-pais">País</label>
-          <input
+          {/*<input
             className={styles.input}
             id="edit-pais"
             type="text"
             value={pais}
             onChange={(e) => setPais(e.target.value)}
             required
-          />
+          />*/}
+          <select 
+            id = "pais"
+            className={styles.input}
+            /*value={pais} 
+            onChange={(e) => setPais(e.target.value)}*/
+            
+            value={paisCodigo && pais ? `${paisCodigo}_${pais}` : ""} 
+            onChange={(e) => {
+              const valorCompleto = e.target.value;
+              if (valorCompleto) {
+                const [codigo, nombre] = valorCompleto.split('_');
+                setPaisCodigo(codigo); // Guardamos el código para los useEffect
+                setPais(nombre);       // Tu variable 'pais' ahora guarda el NOMBRE
+              } else {
+                setPaisCodigo('');
+                setPais('');
+              }
+            }} required
+          >
+            <option value="">Selecciona un país</option>
+            {paises.map((p) => (
+              <option key={p.isoCode} value={`${p.isoCode}_${p.name}`}>
+                {p.name}
+                {/*{p.flag} {p.name}*/}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
       <div className={styles.formRow}>
         <div>
           <label className={styles.label} htmlFor="edit-provincia">Provincia</label>
-          <input
+          {/*<input
             className={styles.input}
             id="edit-provincia"
             type="text"
             value={provincia}
             onChange={(e) => setProvincia(e.target.value)}
             required
-          />
+          />*/}
+          <select 
+            id = "provincia"
+            className={styles.input}
+            disabled={!pais}
+            /*value={provincia} 
+            onChange={(e) => setProvincia(e.target.value)}*/
+            value={provinciaCodigo && provincia ? `${provinciaCodigo}_${provincia}` : ""} 
+            onChange={(e) => {
+              const valorCompleto = e.target.value;
+              if (valorCompleto) {
+                const [codigo, nombre] = valorCompleto.split('_');
+                setProvinciaCodigo(codigo); // Guardamos el código para los useEffect
+                setProvincia(nombre);       // Tu variable 'provincia' ahora guarda el NOMBRE
+              } else {
+                setProvinciaCodigo('');
+                setProvincia('');
+              }
+            }} required
+          >
+            <option value="">Selecciona una provincia</option>
+            {provincias.map((p) => (
+              <option key={p.isoCode} value={`${p.isoCode}_${p.name}`}>
+                {p.name}
+              </option>
+            ))}
+          </select>
         </div>
         <div>
           <label className={styles.label} htmlFor="edit-localidad">Localidad</label>
-          <input
+          {/*<input
             className={styles.input}
             id="edit-localidad"
             type="text"
             value={localidad}
             onChange={(e) => setLocalidad(e.target.value)}
             required
-          />
+          />*/}
+          <select 
+            id = "localidad"
+            className={styles.input}
+            value={localidad} 
+            disabled={!provincia}
+            onChange={(e) => setLocalidad(e.target.value)}
+            required
+          >
+            <option value="">Selecciona una localidad</option>
+            {localidades.map((l) => (
+              <option key={l.name} value={l.name}>
+                {l.name}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
        
@@ -617,7 +776,9 @@ function UserEditForm({
             onChange={(e) => setRole(e.target.value)}
           >
             {ROLES.map((r) => (
+              !(roleUsLog === "ADMIN" && r.value === "ROOT") && (
               <option key={r.value} value={r.value}>{r.label}</option>
+            )
             ))}
           </select>
         </div>

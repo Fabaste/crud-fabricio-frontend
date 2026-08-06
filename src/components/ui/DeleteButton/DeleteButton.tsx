@@ -11,7 +11,7 @@ interface DeleteButtonProps {
 
 function DeleteButton  ({
   onClick,
-  ariaLabel = "Eliminar elemento",
+  ariaLabel = "",
   className = "",
   disabled = false,
 }:DeleteButtonProps) {
