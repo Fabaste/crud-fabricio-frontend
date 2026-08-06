@@ -16,6 +16,7 @@ import Paginacion from '@/components/blocks/Pagination/Pagination'; // Importa l
 import PasswordInput from '@/components/ui/Input/PasswordInput'
 import { Country, State, City, ICountry, IState, ICity  } from 'country-state-city';
 import { toast } from 'react-hot-toast';
+//import { User } from 'lucide-react'
 
 const ROLES = [
   {value:'ROOT', label: 'Root'},
@@ -29,6 +30,39 @@ const GENEROS = [
   {value:'F', label: 'Femenino'},
 ]
 
+function normalizeDateValue(value?: string | null) {
+  if (!value) return ''
+
+  const trimmedValue = value.trim()
+  if (!trimmedValue) return ''
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmedValue)) {
+    return trimmedValue
+  }
+
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(trimmedValue)) {
+    const [day, month, year] = trimmedValue.split('/')
+    return `${year}-${month}-${day}`
+  }
+
+  const parsedDate = new Date(trimmedValue)
+  if (!Number.isNaN(parsedDate.getTime())) {
+    const year = parsedDate.getFullYear()
+    const month = String(parsedDate.getMonth() + 1).padStart(2, '0')
+    const day = String(parsedDate.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
+  return ''
+}
+
+function formatDateValue(value?: string | null) {
+  const normalizedValue = normalizeDateValue(value)
+  if (!normalizedValue) return ''
+
+  const [year, month, day] = normalizedValue.split('-')
+  return `${day}/${month}/${year}`
+}
 
 function Home() {
   const navigate = useNavigate()
@@ -101,10 +135,17 @@ function Home() {
     setModalUser(null)
   }
 
+  function handleUserCreated(created: User) {
+    setUsers((prev) => [created, ...prev.filter((u) => u._id !== created._id)])
+    setCurrentPage(1)
+    closeModal()
+  }
+
   function handleUserUpdated(updated: User) {
     setUsers((prev) => prev.map((u) => (u._id === updated._id ? updated : u)))
     closeModal()
   }
+
   // 4. Función para eliminar el usuario por su ID
   const handleUserDeleted = (deleted: User) => {
     setUsers((prev) => prev.filter((u) => (u._id !== deleted._id)))
@@ -184,9 +225,11 @@ function Home() {
             {/*src={`https://ui-avatars.com{nombreUserLog || 'U'}+${apellidoUserLog || ''}&background=random`}*/}
           <div className={styles.userInfo}>
             <span className={styles.userName}>{loggedUserName}</span>
-            <span className={`${styles.badge} ${styles[`badge__${roleUserLog?.toLowerCase()}`] ?? ''}`}>
-              {roleUserLog}
-            </span>
+            <div>
+              <span className={`${styles.badge} ${styles[`badge__${roleUserLog?.toLowerCase()}`] ?? ''}`}>
+                {roleUserLog}
+              </span>
+            </div>
           </div>
         </div>
         <div className={styles.topDate}>
@@ -331,7 +374,7 @@ function Home() {
           <UserEditForm roleUsLog = {roleUserLog ?? ''} user={modalUser} onCancel={closeModal} onSaved={handleUserUpdated} />
         )}
         {modalMode === 'create' && (
-          <UserEditForm roleUsLog = {roleUserLog ?? ''} user={modalUser} onCancel={closeModal} onSaved={handleUserUpdated} />
+          <UserEditForm roleUsLog = {roleUserLog ?? ''} user={modalUser} onCancel={closeModal} onSaved={(savedUser) => handleUserCreated(savedUser)} />
         )}
         {modalMode === 'confirm' && (
           <ConfirmDelete user={modalUser} onCancel={closeModal} onSaved={handleUserDeleted} />
@@ -353,7 +396,7 @@ function UserDetails({ user }: { user: User }) {
     ['Rol', user.role],
     ['Género', user.genero],
     ['Edad', String(user.edad)],
-    ['Fecha de nacimiento', user.fechaNacimiento?.slice(0, 10)],
+    ['Fecha de nacimiento', formatDateValue(user.fechaNacimiento) || '-'],
     ['Teléfono', user.telefono],
     ['Dirección', user.direccion],
     ['Localidad', user.localidad],
@@ -397,7 +440,7 @@ function UserEditForm({
   const [password, setPassword] = useState(user?.password ?? '')
   const [genero, setGenero] = useState(user?.genero ?? GENEROS[0].value) //Genero inicial por defecto
   const [edad, setEdad] = useState(String(user?.edad ?? ''))
-  const [fechaNacimiento, setFechaNacimiento] = useState(user?.fechaNacimiento?.slice(0, 10) ?? '')
+  const [fechaNacimiento, setFechaNacimiento] = useState(() => normalizeDateValue(user?.fechaNacimiento))
   const [telefono, setTelefono] = useState(user?.telefono ?? '')
   const [direccion, setDireccion] = useState<string>(user?.direccion ?? '')
   const [localidad, setLocalidad] = useState<string>(user?.localidad ?? '')
@@ -479,15 +522,17 @@ function UserEditForm({
     setError(null)
     setLoading(true)
 
-    const idToast = toast.loading('Procesando datos y enviando correo...');
+    const idToast = toast.loading('Creando usuario...');
 
     // 1. Agrupamos los datos base que comparten ambos modos
+    const normalizedFechaNacimiento = normalizeDateValue(fechaNacimiento)
+
     const userData = {
       nombre,
       apellido,
       genero,
       edad: Number(edad),
-      fechaNacimiento,
+      fechaNacimiento: normalizedFechaNacimiento,
       telefono,
       direccion,
       localidad,
@@ -511,10 +556,11 @@ function UserEditForm({
         toast.success('El usuario se creó con éxito', { id: idToast });
       }
 
-      onSaved(savedUser)
+      onSaved({ ...savedUser, fechaNacimiento: normalizedFechaNacimiento })
       
     } catch (error: any) {
       setError(error.message)
+      toast.error(error.message || 'Error al crear usuario', { id: idToast })
     } finally {
       setLoading(false)
     }
@@ -810,29 +856,35 @@ function ConfirmDelete({
   onCancel: () => void
   onSaved: (user: User) => void
 }) {
-    const [error, setError] = useState<string | null>(null)
+    //const [error, setError] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
+    
 
     //async function handleDelete(e: React.FormEvent) {
     async function handleDelete() {
       //e.preventDefault()
-      setError(null)
+      //setError(null)
       setLoading(true)
-      console.log(user)
+
       // 1. Agrupamos los datos base que comparten ambos modos
       const userSelecter = user || null
-
+      
+      const idToast = toast.loading('Borrando usuario');
       try {
         //let deletedUser: User
         if (!userSelecter?._id) {
           console.error("No se encontró el ID del usuario");
+          toast.success('El usuario no se pudo borrar',{id: idToast});
           return; 
         }
-        const deletedUser = await deleteUser(userSelecter._id)
+        
+        toast.success('El usuario se borró con éxito',{id: idToast});
+        await deleteUser(userSelecter._id)
 
         onSaved(userSelecter)
       } catch (error: any) {
-        setError(error.message)
+        //setError(error.message)
+      toast.error(error.message || 'Error al borrar usuario', { id: idToast })
       } finally {
         setLoading(false)
       }
@@ -840,7 +892,7 @@ function ConfirmDelete({
 
     return(
       <div>
-        <p>¿Estás seguro de que deseas eliminar este usuario? Esta acción no se puede deshacer.</p>
+        <p>¿Estás seguro de que deseas eliminar a {user?.nombre} {user?.apellido}? Esta acción no se puede deshacer.</p>
         <div className={styles.modalActions}>
           <Button variant="secondary" type="button" onClick={onCancel}>Cancelar</Button>
           <Button variant="primary" type="button" onClick={handleDelete} disabled={loading}>

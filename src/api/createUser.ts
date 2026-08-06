@@ -45,5 +45,7 @@ export async function createUser(data: CreateUserData): Promise<User> {
     throw new Error(body.message) // ej: "El usuario ya existe", "Acceso denegado"
   }
 
+  /*const { id: userId, ...rest } = body.data
+  return { _id: userId, ...rest }*/
   return body.data
 }
