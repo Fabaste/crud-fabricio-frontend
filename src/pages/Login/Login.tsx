@@ -24,13 +24,13 @@ function Login() {
   const [tokenTemporal, setTokenTemporal] = useState<string>('')
 
   // Estados comunes
-  const [error, setError] = useState<string | null>(null)
+  //const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   // Paso 1: Enviar Email y Contraseña
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setError(null)
+    //setError(null)
     setLoading(true)
 
     // 2. Iniciamos el toast de carga y guardamos su ID de referencia
@@ -60,7 +60,7 @@ function Login() {
         navigate({ to: '/' })
       }
     } catch (error: any) {
-      setError(error.message)
+      //setError(error.message)
       // 3. Reutilizamos el ID para transformar la carga en un aviso de error explícito
       toast.error(error.message || 'Error al iniciar sesión', { id: toastId })
     } finally {
@@ -71,7 +71,7 @@ function Login() {
   // Paso 2: Enviar código de 6 dígitos
   async function handleVerify2FA(e: React.FormEvent) {
     e.preventDefault()
-    setError(null)
+    //setError(null)
     setLoading(true)
 
     const toastId = toast.loading('Verificando código de seguridad...')
@@ -87,7 +87,7 @@ function Login() {
       
       navigate({ to: '/' })
     } catch (error: any) {
-      setError(error.message)
+      //setError(error.message)
       toast.error(error.message || 'Código incorrecto o expirado', { id: toastId })
     } finally {
       setLoading(false)
@@ -174,7 +174,7 @@ function Login() {
             </Button>
 
             <p className={styles.footer}>
-              <button type="button" className={styles.linkButton} onClick={() => { setStep2FA(false); setError(null); }}>
+              <button type="button" className={styles.linkButton} onClick={() => { setStep2FA(false); }}>
                 Volver al login
               </button>
             </p>

@@ -16,8 +16,6 @@ import Paginacion from '@/components/blocks/Pagination/Pagination'; // Importa l
 import PasswordInput from '@/components/ui/Input/PasswordInput'
 import { Country, State, City, ICountry, IState, ICity  } from 'country-state-city';
 import { toast } from 'react-hot-toast';
-import { Users } from 'lucide-react'
-//import { User } from 'lucide-react'
 
 const ROLES = [
   {value:'ROOT', label: 'Root'},
