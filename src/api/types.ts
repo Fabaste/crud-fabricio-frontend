@@ -16,3 +16,15 @@ export interface User {
   codigoPostal: string
   role: string
 }
+
+export function normalizeUser(user: Record<string, any> | null | undefined): User | null {
+  if (!user) return null
+
+  const userId = user._id ?? user.id
+  if (!userId) return null
+
+  return {
+    ...user,
+    _id: String(userId),
+  } as User
+}

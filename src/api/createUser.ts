@@ -1,5 +1,5 @@
 import { API_URL } from '@/config/globals'
-import type { User } from '@/api/types'
+import { normalizeUser, type User } from '@/api/types'
 
 export type CreateUserData = Omit<User, '_id'>;
 
@@ -7,9 +7,17 @@ export type CreateUserData = Omit<User, '_id'>;
 // POST /users → crea un usuario nuevo
 // Es una ruta protegida: solo un admin ya logueado puede crear usuarios
 // ------------------------------------------------------------
-//export async function createUser(nombre: string, apellido: string, email: string, password: string) {
-export async function createUser(data: CreateUserData): Promise<User> {
+export async function createUser(dataOrName: CreateUserData | string, apellido?: string, email?: string, password?: string): Promise<User> {
   const token = localStorage.getItem('token')
+
+  const payload = typeof dataOrName === 'string'
+    ? {
+        nombre: dataOrName,
+        apellido: apellido ?? '',
+        email: email ?? '',
+        password: password ?? '',
+      }
+    : dataOrName
 
   const response = await fetch(`${API_URL}/users`, {
     method: 'POST',
@@ -17,35 +25,19 @@ export async function createUser(data: CreateUserData): Promise<User> {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-
-    body: JSON.stringify(data),
-    /*body: JSON.stringify({
-      userData.nombre,
-      apellido,
-      email,
-      password,
-      role: 'USER',
-      // El backend exige estos campos también.
-      // Para mantener el formulario simple, mandamos valores por defecto.
-      fechaNacimiento: '2000-01-01',
-      edad: 25,
-      genero: 'No especificado',
-      telefono: '000000',
-      direccion: 'Sin dirección',
-      localidad: 'Sin localidad',
-      provincia: 'Sin provincia',
-      pais: 'Argentina',
-      codigoPostal: '0000',
-    }),*/
+    body: JSON.stringify(payload),
   })
 
-  const body = await response.json()
+  const body = await response.json().catch(() => ({}))
 
   if (!body.success) {
-    throw new Error(body.message) // ej: "El usuario ya existe", "Acceso denegado"
+    throw new Error(body.message || 'No se pudo crear el usuario')
   }
 
-  /*const { id: userId, ...rest } = body.data
-  return { _id: userId, ...rest }*/
-  return body.data
+  const normalizedUser = normalizeUser(body.data)
+  if (!normalizedUser) {
+    throw new Error('La respuesta del servidor no devolvió un usuario válido')
+  }
+
+  return normalizedUser
 }

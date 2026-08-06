@@ -1,5 +1,5 @@
 import {API_URL} from '@/config/globals.ts'
-import type { User } from '@/api/types.ts'
+import { normalizeUser, type User } from '@/api/types.ts'
 
 // ------------------------------------------------------------
 // GET /users → devuelve la lista de usuarios
@@ -16,11 +16,12 @@ export async function getUsers(): Promise<User []> {
             Authorization: `Bearer ${token}`,
         },
     })
-    const body = await response.json()
+    const body = await response.json().catch(() => ({}))
 
     if(!body.success) {
-        throw new Error(body.message) // ej: "Acceso denegado", "Token inválido"
+        throw new Error(body.message || 'No se pudo obtener la lista de usuarios') // ej: "Acceso denegado", "Token inválido"
     }
 
-    return body.data
+    const rawUsers = Array.isArray(body.data) ? body.data : body.data ? [body.data] : []
+    return rawUsers.map((user: Record<string, any>) => normalizeUser(user)).filter((user: User | null | undefined): user is User => Boolean(user))
 }

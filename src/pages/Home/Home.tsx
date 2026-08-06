@@ -16,6 +16,7 @@ import Paginacion from '@/components/blocks/Pagination/Pagination'; // Importa l
 import PasswordInput from '@/components/ui/Input/PasswordInput'
 import { Country, State, City, ICountry, IState, ICity  } from 'country-state-city';
 import { toast } from 'react-hot-toast';
+import { Users } from 'lucide-react'
 //import { User } from 'lucide-react'
 
 const ROLES = [
@@ -871,20 +872,17 @@ function ConfirmDelete({
       
       const idToast = toast.loading('Borrando usuario');
       try {
-        //let deletedUser: User
         if (!userSelecter?._id) {
           console.error("No se encontró el ID del usuario");
-          toast.success('El usuario no se pudo borrar',{id: idToast});
+          toast.error('No se encontró el ID del usuario', { id: idToast });
           return; 
         }
-        
-        toast.success('El usuario se borró con éxito',{id: idToast});
-        await deleteUser(userSelecter._id)
 
+        await deleteUser(userSelecter._id)
+        toast.success('El usuario se borró con éxito', { id: idToast });
         onSaved(userSelecter)
       } catch (error: any) {
-        //setError(error.message)
-      toast.error(error.message || 'Error al borrar usuario', { id: idToast })
+        toast.error(error.message || 'Error al borrar usuario', { id: idToast })
       } finally {
         setLoading(false)
       }
