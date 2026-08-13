@@ -4,4 +4,4 @@ dist-ssr
 *.local
 .DS_Store
 .env
-*/globals.ts   
+config/globals.ts
